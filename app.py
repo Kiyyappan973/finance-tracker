@@ -9,7 +9,7 @@ import math
 load_dotenv()
 
 app = Flask(__name__)
-app.secret_key = "your-secret-key-change-this-later"
+app.secret_key = os.getenv("SECRET_KEY", "fallback-secret-for-local-use")
 bcrypt = Bcrypt(app)
 
 client = MongoClient(os.getenv("MONGODB_URI"))
