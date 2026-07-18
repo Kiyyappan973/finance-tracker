@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">Create Account</h1>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form action="/signup" method="POST">
+        <div class="mb-3">
+            <label class="form-label">Choose a Username</label>
+            <input type="text" name="username" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Choose a Password</label>
+            <input type="password" name="password" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Sign Up</button>
+        <a href="/login" class="btn btn-secondary">Already have an account?</a>
+    </form>
+{% endblock %}

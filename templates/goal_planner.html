@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">Goal Planner</h1>
+
+    <form action="/calculate_goal" method="POST">
+        <div class="mb-3">
+            <label class="form-label">Goal Name (e.g. Buy a Car)</label>
+            <input type="text" name="goal_name" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Target Amount (₹)</label>
+            <input type="number" name="target_amount" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Monthly Amount You Can Save (₹)</label>
+            <input type="number" name="monthly_saving" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Expected Annual Interest Rate (%)</label>
+            <input type="number" step="0.1" name="interest_rate" class="form-control" value="7" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Calculate</button>
+    </form>
+
+    {% if result %}
+    <div class="card mt-4 bg-light">
+        <div class="card-body">
+            <h4>Goal: {{ goal_name }}</h4>
+            <p class="fs-5">
+                Saving <strong>₹{{ monthly_saving }}</strong> every month, 
+                you will reach <strong>₹{{ target_amount }}</strong> in 
+                approximately <strong>{{ years }} years ({{ months }} months)</strong>.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+{% endblock %}

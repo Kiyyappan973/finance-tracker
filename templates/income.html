@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">Add Income</h1>
+
+    <form action="/add_income" method="POST">
+        <div class="mb-3">
+            <label class="form-label">Source (e.g. Salary)</label>
+            <input type="text" name="source" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Amount</label>
+            <input type="number" name="amount" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Month</label>
+            <input type="text" name="month" class="form-control" placeholder="e.g. July" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Income</button>
+        <a href="/" class="btn btn-secondary">Back to Home</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">Financial Advice</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h6>Total Income</h6>
+                    <p class="fs-5">₹{{ total_income }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h6>Total Expenses</h6>
+                    <p class="fs-5">₹{{ total_expenses }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h6>Total Savings</h6>
+                    <p class="fs-5">₹{{ total_savings }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>Your Personalized Tips</h3>
+
+    {% for tip in tips %}
+        <div class="alert alert-{{ tip.type }}">
+            {{ tip.message }}
+        </div>
+    {% endfor %}
+
+    {% if tips|length == 0 %}
+        <p class="text-muted">No specific tips right now — your finances look balanced!</p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">Dashboard</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Total Income</h5>
+                    <p class="card-text fs-4">₹{{ total_income }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Total Expenses</h5>
+                    <p class="card-text fs-4">₹{{ total_expenses }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Savings</h5>
+                    <p class="card-text fs-4">₹{{ total_savings }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3>Income History</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Source</th>
+                <th>Amount</th>
+                <th>Month</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in income_data %}
+            <tr>
+                <td>{{ item.source }}</td>
+                <td>₹{{ item.amount }}</td>
+                <td>{{ item.month }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3>Expense History</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Category</th>
+                <th>Amount</th>
+                <th>Month</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in expense_data %}
+            <tr>
+                <td>{{ item.category }}</td>
+                <td>₹{{ item.amount }}</td>
+                <td>{{ item.month }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

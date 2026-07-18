@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">Insurance Policies</h1>
+
+    <form action="/add_insurance" method="POST" class="mb-5">
+        <div class="mb-3">
+            <label class="form-label">Insurance Type (e.g. Health, Vehicle, Life)</label>
+            <input type="text" name="type" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Premium Amount (₹)</label>
+            <input type="number" name="premium" class="form-control" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Next Due Date</label>
+            <input type="date" name="due_date" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Policy</button>
+    </form>
+
+    <h3>Your Policies</h3>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Premium</th>
+                <th>Due Date</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for policy in policies %}
+            <tr>
+                <td>{{ policy.type }}</td>
+                <td>₹{{ policy.premium }}</td>
+                <td>{{ policy.due_date }}</td>
+                <td>
+                    {% if policy.days_left < 0 %}
+                        <span class="badge bg-danger">Overdue</span>
+                    {% elif policy.days_left <= 7 %}
+                        <span class="badge bg-warning text-dark">Due Soon ({{ policy.days_left }} days)</span>
+                    {% else %}
+                        <span class="badge bg-success">OK ({{ policy.days_left }} days left)</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
