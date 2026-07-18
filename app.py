@@ -5,6 +5,7 @@ from flask_bcrypt import Bcrypt
 from datetime import datetime
 import os
 import math
+import certifi
 
 load_dotenv()
 
@@ -12,7 +13,7 @@ app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "fallback-secret-for-local-use")
 bcrypt = Bcrypt(app)
 
-client = MongoClient(os.getenv("MONGODB_URI"))
+client = MongoClient(os.getenv("MONGODB_URI"), tlsCAFile=certifi.where())
 db = client["finance_tracker"]
 
 try:
