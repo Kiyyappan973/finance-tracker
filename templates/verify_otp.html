@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mb-4">Verify Your Email</h1>
+
+    <p>We've sent a 6-digit code to your email. Enter it below to activate your account.</p>
+
+    {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <form action="/verify_otp" method="POST">
+        <div class="mb-3">
+            <label class="form-label">Enter OTP</label>
+            <input type="text" name="otp" class="form-control" maxlength="6" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Verify</button>
+    </form>
+{% endblock %}

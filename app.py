@@ -2,7 +2,9 @@ from flask import Flask, render_template, request, redirect, session
 from pymongo import MongoClient
 from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
+from email_utils import generate_otp, send_otp_email
 from datetime import datetime
+from calculations import calculate_months_needed
 import os
 import math
 import certifi
@@ -117,11 +119,7 @@ def calculate_goal():
     monthly_saving = float(request.form['monthly_saving'])
     annual_rate = float(request.form['interest_rate'])
 
-    monthly_rate = (annual_rate / 100) / 12
-
-    n_months = math.log((target_amount * monthly_rate / monthly_saving) + 1) / math.log(1 + monthly_rate)
-
-    months_needed = round(n_months)
+    months_needed = calculate_months_needed(target_amount, monthly_saving, annual_rate)
     years_needed = round(months_needed / 12, 1)
 
     return render_template('goal_planner.html',
@@ -138,22 +136,53 @@ def signup():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        email = request.form['email']
 
         existing_user = db.users.find_one({"username": username})
         if existing_user:
             return render_template('signup.html', error="Username already taken")
 
+        otp = generate_otp()
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
 
-        db.users.insert_one({
+        # Temporarily store pending signup info
+        db.pending_signups.delete_many({"email": email})  # remove any old attempts
+        db.pending_signups.insert_one({
             "username": username,
-            "password": hashed_password
+            "password": hashed_password,
+            "email": email,
+            "otp": otp
         })
 
-        return redirect('/login')
+        send_otp_email(email, otp)
+
+        session['pending_email'] = email
+        return redirect('/verify_otp')
 
     return render_template('signup.html')
 
+
+@app.route('/verify_otp', methods=['GET', 'POST'])
+def verify_otp():
+    if request.method == 'POST':
+        entered_otp = request.form['otp']
+        email = session.get('pending_email')
+
+        pending_user = db.pending_signups.find_one({"email": email})
+
+        if pending_user and pending_user['otp'] == entered_otp:
+            db.users.insert_one({
+                "username": pending_user['username'],
+                "password": pending_user['password'],
+                "email": pending_user['email']
+            })
+            db.pending_signups.delete_one({"email": email})
+            session.pop('pending_email', None)
+            return redirect('/login')
+        else:
+            return render_template('verify_otp.html', error="Incorrect OTP. Please try again.")
+
+    return render_template('verify_otp.html')
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
