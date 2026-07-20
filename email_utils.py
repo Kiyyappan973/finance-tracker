@@ -27,6 +27,7 @@ def send_otp_email(receiver_email, otp):
     )
 
     try:
-        api_instance.send_transac_email(send_smtp_email)
+        response = api_instance.send_transac_email(send_smtp_email)
+        print("EMAIL SENT SUCCESSFULLY:", response)
     except ApiException as e:
-        print("Error sending email:", e)
+        print("EMAIL SENDING FAILED:", e)
