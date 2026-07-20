@@ -1,7 +1,7 @@
-import smtplib
 import random
 import os
-from email.mime.text import MIMEText
+import sib_api_v3_sdk
+from sib_api_v3_sdk.rest import ApiException
 
 
 def generate_otp():
@@ -9,17 +9,24 @@ def generate_otp():
 
 
 def send_otp_email(receiver_email, otp):
-    sender_email = os.getenv("EMAIL_ADDRESS")
-    sender_password = os.getenv("EMAIL_PASSWORD")
+    configuration = sib_api_v3_sdk.Configuration()
+    configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
 
+    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+
+    sender = {"name": "Finance Tracker", "email": os.getenv("EMAIL_ADDRESS")}
+    to = [{"email": receiver_email}]
     subject = "Your Finance Tracker Verification Code"
-    body = f"Your OTP code is: {otp}\n\nThis code will expire in 10 minutes."
+    html_content = f"<p>Your OTP code is: <strong>{otp}</strong></p><p>This code will expire in 10 minutes.</p>"
 
-    message = MIMEText(body)
-    message["Subject"] = subject
-    message["From"] = sender_email
-    message["To"] = receiver_email
+    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+        to=to,
+        sender=sender,
+        subject=subject,
+        html_content=html_content
+    )
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(sender_email, sender_password)
-        server.sendmail(sender_email, receiver_email, message.as_string())
+    try:
+        api_instance.send_transac_email(send_smtp_email)
+    except ApiException as e:
+        print("Error sending email:", e)
