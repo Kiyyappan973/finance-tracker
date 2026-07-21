@@ -1,33 +1,27 @@
-import random
 import os
+from dotenv import load_dotenv
 import sib_api_v3_sdk
 from sib_api_v3_sdk.rest import ApiException
 
+load_dotenv()
 
-def generate_otp():
-    return str(random.randint(100000, 999999))
+configuration = sib_api_v3_sdk.Configuration()
+configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
 
+api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
 
-def send_otp_email(receiver_email, otp):
-    configuration = sib_api_v3_sdk.Configuration()
-    configuration.api_key['api-key'] = os.getenv("BREVO_API_KEY")
+sender = {"name": "Finance Tracker", "email": os.getenv("EMAIL_ADDRESS")}
+to = [{"email": os.getenv("EMAIL_ADDRESS")}]  # sending to yourself as a test
 
-    api_instance = sib_api_v3_sdk.TransactionalEmailsApi(sib_api_v3_sdk.ApiClient(configuration))
+send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
+    to=to,
+    sender=sender,
+    subject="Test Email",
+    html_content="<p>This is a test</p>"
+)
 
-    sender = {"name": "Finance Tracker", "email": os.getenv("EMAIL_ADDRESS")}
-    to = [{"email": receiver_email}]
-    subject = "Your Finance Tracker Verification Code"
-    html_content = f"<p>Your OTP code is: <strong>{otp}</strong></p><p>This code will expire in 10 minutes.</p>"
-
-    send_smtp_email = sib_api_v3_sdk.SendSmtpEmail(
-        to=to,
-        sender=sender,
-        subject=subject,
-        html_content=html_content
-    )
-
-    try:
-        response = api_instance.send_transac_email(send_smtp_email)
-        print("EMAIL SENT SUCCESSFULLY:", response, flush=True)
-    except ApiException as e:
-        print("EMAIL SENDING FAILED:", e, flush=True)
+try:
+    response = api_instance.send_transac_email(send_smtp_email)
+    print("SUCCESS:", response)
+except ApiException as e:
+    print("FAILED:", e)
