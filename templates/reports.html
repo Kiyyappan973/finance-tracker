@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+
+<div class="container py-4">
+
+    <h2 class="fw-bold mb-4">
+        📊 Financial Reports
+    </h2>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <form method="GET" action="/reports">
+
+                <div class="row">
+
+                    <div class="col-md-6">
+
+                        <label class="form-label">
+                            Select Month
+                        </label>
+
+                        <select
+                            name="month"
+                            class="form-select">
+
+                            <option value="">All Months</option>
+
+                            <option>January</option>
+                            <option>February</option>
+                            <option>March</option>
+                            <option>April</option>
+                            <option>May</option>
+                            <option>June</option>
+                            <option>July</option>
+                            <option>August</option>
+                            <option>September</option>
+                            <option>October</option>
+                            <option>November</option>
+                            <option>December</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6 d-flex align-items-end">
+
+                        <button
+                            class="btn btn-primary w-100">
+
+                            View Report
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <div class="col-md-4">
+
+            <div class="card bg-success text-white shadow-sm">
+
+                <div class="card-body">
+
+                    <h5>Total Income</h5>
+
+                    <h2>
+                        ₹{{ total_income }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card bg-danger text-white shadow-sm">
+
+                <div class="card-body">
+
+                    <h5>Total Expenses</h5>
+
+                    <h2>
+                        ₹{{ total_expenses }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card bg-primary text-white shadow-sm">
+
+                <div class="card-body">
+
+                    <h5>Total Savings</h5>
+
+                    <h2>
+                        ₹{{ total_savings }}
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
