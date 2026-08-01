@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Header -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+                🤖 Smart Transaction Analyzer
+            </h2>
+
+            <p class="text-muted mb-0">
+                Upload your Bank Statement and let AI organize your finances.
+            </p>
+
+        </div>
+
+        <span class="badge bg-primary fs-6 px-3 py-2">
+            AI Powered
+        </span>
+
+    </div>
+
+    <!-- Upload Card -->
+
+    <div class="card border-0 shadow-lg rounded-4">
+
+        <div class="card-body text-center py-5">
+
+            <img
+                src="https://cdn-icons-png.flaticon.com/512/2889/2889676.png"
+                width="120"
+                class="mb-4">
+
+            <h3 class="fw-bold">
+                Upload Bank Statement
+            </h3>
+
+            <p class="text-muted">
+
+                PDF • CSV • Excel
+
+            </p>
+
+            <form
+                action="/analyze_statement"
+                method="POST"
+                enctype="multipart/form-data">
+
+                <input
+
+                    type="file"
+
+                    class="form-control form-control-lg mb-4"
+
+                    name="statement"
+
+                    accept=".pdf,.csv,.xlsx"
+
+                    required>
+
+                <button
+                    class="btn btn-primary btn-lg rounded-pill px-5">
+
+                    🚀 Upload & Analyze
+
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

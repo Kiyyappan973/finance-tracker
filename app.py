@@ -1,5 +1,6 @@
-from flask import Flask, render_template, request, redirect, session, send_file, flash
+from flask import Flask, render_template, request, redirect, session, send_file, flash, jsonify
 from pymongo import MongoClient
+from datetime import datetime
 from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
 from email_utils import generate_otp, send_otp_email
@@ -57,9 +58,43 @@ def home():
 
 @app.route('/income')
 def income_page():
+
     if not is_logged_in():
         return redirect('/login')
-    return render_template('income.html')
+
+    username = session["username"]
+
+    income_data = list(
+        db.income.find({"username": username})
+    )
+
+    total_income = sum(
+        item["amount"] for item in income_data
+    )
+
+    current_month = datetime.now().strftime("%B")
+
+    monthly_income = sum(
+        item["amount"]
+        for item in income_data
+        if item["month"] == current_month
+    )
+
+    total_entries = len(income_data)
+
+    return render_template(
+
+        "income.html",
+
+        income_data=income_data,
+
+        total_income=total_income,
+
+        monthly_income=monthly_income,
+
+        total_entries=total_entries
+
+    )
 
 
 @app.route('/add_income', methods=['POST'])
@@ -69,8 +104,11 @@ def add_income():
         return redirect('/login')
 
     source = request.form['source'].strip()
+
     amount = float(request.form['amount'])
-    month = request.form['month'].strip()
+
+    # Month always save in proper format
+    month = request.form['month'].strip().title()
 
     db.income.insert_one({
         "username": session['username'],
@@ -84,9 +122,43 @@ def add_income():
 
 @app.route('/expenses')
 def expenses_page():
+
     if not is_logged_in():
         return redirect('/login')
-    return render_template('expenses.html')
+
+    username = session["username"]
+
+    expense_data = list(
+        db.expenses.find({"username": username})
+    )
+
+    total_expenses = sum(
+        item["amount"] for item in expense_data
+    )
+
+    current_month = datetime.now().strftime("%B")
+
+    monthly_expenses = sum(
+        item["amount"]
+        for item in expense_data
+        if item["month"] == current_month
+    )
+
+    total_entries = len(expense_data)
+
+    return render_template(
+
+        "expenses.html",
+
+        expense_data=expense_data,
+
+        total_expenses=total_expenses,
+
+        monthly_expenses=monthly_expenses,
+
+        total_entries=total_entries
+
+    )
 
 
 @app.route('/add_expense', methods=['POST'])
@@ -230,28 +302,101 @@ def dashboard():
 
 @app.route('/goal_planner')
 def goal_planner_page():
-    return render_template('goal_planner.html')
+
+    if not is_logged_in():
+        return redirect('/login')
+
+    username = session["username"]
+
+    goals = list(
+        db.goals.find({"username": username})
+    )
+
+    return render_template(
+        "goal_planner.html",
+        goals=goals
+    )
+@app.route('/add_goal', methods=['POST'])
+def add_goal():
+
+    if not is_logged_in():
+        return redirect('/login')
+
+    db.goals.insert_one({
+
+        "username": session["username"],
+
+        "goal_name": request.form["goal_name"],
+
+        "target_amount": float(request.form["target_amount"]),
+
+        "saved_amount": float(request.form["saved_amount"]),
+
+        "target_date": request.form["target_date"]
+
+    })
+
+    flash("Goal added successfully!", "success")
+
+    return redirect('/goal_planner')
 
 
 @app.route('/calculate_goal', methods=['POST'])
 def calculate_goal():
+
     goal_name = request.form['goal_name']
+
     target_amount = float(request.form['target_amount'])
+
     monthly_saving = float(request.form['monthly_saving'])
-    annual_rate = float(request.form['interest_rate'])
 
-    months_needed = calculate_months_needed(target_amount, monthly_saving, annual_rate)
-    years_needed = round(months_needed / 12, 1)
+    investment_type = request.form['investment_type']
 
-    return render_template('goal_planner.html',
-                            result=True,
-                            goal_name=goal_name,
-                            target_amount=target_amount,
-                            monthly_saving=monthly_saving,
-                            months=months_needed,
-                            years=years_needed)
+    interest_rate = float(request.form['interest_rate'])
 
+    months_needed = calculate_months_needed(
+        target_amount,
+        monthly_saving,
+        interest_rate
+    )
 
+    years = int(months_needed // 12)
+
+    remaining_months = int(months_needed % 12)
+
+    days = int((months_needed - int(months_needed)) * 30)
+
+    total_invested = monthly_saving * months_needed
+
+    interest_earned = max(0, total_invested - target_amount)
+
+    return render_template(
+
+        'goal_planner.html',
+
+        result=True,
+
+        goal_name=goal_name,
+
+        target_amount=target_amount,
+
+        monthly_saving=monthly_saving,
+
+        investment_type=investment_type,
+
+        interest_rate=interest_rate,
+
+        years=years,
+
+        months=remaining_months,
+
+        days=days,
+
+        total_invested=round(total_invested, 2),
+
+        interest_earned=round(interest_earned, 2)
+
+    )
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
@@ -386,18 +531,36 @@ def insurance_page():
 
 @app.route('/add_insurance', methods=['POST'])
 def add_insurance():
+
     if not is_logged_in():
         return redirect('/login')
 
-    insurance_type = request.form['type']
+    company = request.form['company'].strip()
+    policy_number = request.form['policy_number'].strip()
+    insurance_type = request.form['type'].strip()
+    coverage = float(request.form['coverage'])
     premium = float(request.form['premium'])
     due_date = request.form['due_date']
+    nominee = request.form['nominee'].strip()
 
     db.insurance.insert_one({
+
         "username": session['username'],
+
+        "company": company,
+
+        "policy_number": policy_number,
+
         "type": insurance_type,
+
+        "coverage": coverage,
+
         "premium": premium,
-        "due_date": due_date
+
+        "due_date": due_date,
+
+        "nominee": nominee
+
     })
 
     return redirect('/insurance')
@@ -925,11 +1088,15 @@ def edit_profile():
         "edit_profile.html",
         user=user
     )
-@app.route("/change_password", methods=["POST"])
+@app.route("/change_password", methods=["GET", "POST"])
 def change_password():
 
     if not is_logged_in():
         return redirect("/login")
+
+    # Open the page
+    if request.method == "GET":
+        return render_template("change_password.html")
 
     username = session["username"]
 
@@ -945,34 +1112,29 @@ def change_password():
         user["password"],
         current_password
     ):
-
         flash("Current password is incorrect!", "danger")
-        return redirect("/edit_profile")
+        return redirect("/change_password")
 
     if new_password != confirm_password:
-
         flash("New passwords do not match!", "warning")
-        return redirect("/edit_profile")
+        return redirect("/change_password")
 
     hashed_password = bcrypt.generate_password_hash(
         new_password
     ).decode("utf-8")
 
     db.users.update_one(
-
         {"username": username},
-
         {
             "$set": {
                 "password": hashed_password
             }
         }
-
     )
 
     flash("Password changed successfully!", "success")
 
-    return redirect("/profile")
+    return redirect("/change_password")
 @app.route("/upload_profile", methods=["POST"])
 def upload_profile():
 
@@ -1010,6 +1172,67 @@ def upload_profile():
     flash("Profile picture updated successfully!", "success")
 
     return redirect("/profile")
+@app.route("/search")
+def search():
+
+    if not is_logged_in():
+        return jsonify([])
+
+    username = session["username"]
+
+    keyword = request.args.get("q", "").strip()
+
+    if keyword == "":
+        return jsonify([])
+
+    keyword = keyword.lower()
+
+    results = []
+
+    # Income Search
+    incomes = db.income.find({"username": username})
+
+    for item in incomes:
+
+        title = str(item.get("source", ""))
+
+        if keyword in title.lower():
+
+            results.append({
+                "type": "Income",
+                "name": title
+            })
+
+    # Expense Search
+    expenses = db.expenses.find({"username": username})
+
+    for item in expenses:
+
+        title = str(item.get("category", ""))
+
+        if keyword in title.lower():
+
+            results.append({
+                "type": "Expense",
+                "name": title
+            })
+
+    return jsonify(results[:8])
+@app.route("/settings")
+def settings():
+
+    if not is_logged_in():
+        return redirect("/login")
+
+    return render_template("settings.html")
+@app.route('/smart_analyzer')
+def smart_analyzer():
+
+    if not is_logged_in():
+        return redirect('/login')
+
+    return render_template("smart_analyzer.html")
+
 
 
 if __name__ == '__main__':

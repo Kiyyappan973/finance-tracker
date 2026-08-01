@@ -4,13 +4,16 @@
 
 {% block content %}
 
-<div class="container py-4">
+<div class="container-fluid py-4">
 
     <h2 class="fw-bold mb-4">
         📊 Financial Reports
     </h2>
+    <p class="text-muted">
+    View your monthly financial summary.
+</p>
 
-    <div class="card shadow-sm mb-4">
+    <div class="card border-0 shadow-lg rounded-4 mb-4">
 
         <div class="card-body">
 
@@ -23,27 +26,64 @@
                         <label class="form-label">
                             Select Month
                         </label>
+                        <select name="month" class="form-select">
 
-                        <select
-                            name="month"
-                            class="form-select">
+    <option value="" {% if not selected_month %}selected{% endif %}>
+        All Months
+    </option>
 
-                            <option value="">All Months</option>
+    <option value="January" {% if selected_month=="January" %}selected{% endif %}>
+        January
+    </option>
 
-                            <option>January</option>
-                            <option>February</option>
-                            <option>March</option>
-                            <option>April</option>
-                            <option>May</option>
-                            <option>June</option>
-                            <option>July</option>
-                            <option>August</option>
-                            <option>September</option>
-                            <option>October</option>
-                            <option>November</option>
-                            <option>December</option>
+    <option value="February" {% if selected_month=="February" %}selected{% endif %}>
+        February
+    </option>
 
-                        </select>
+    <option value="March" {% if selected_month=="March" %}selected{% endif %}>
+        March
+    </option>
+
+    <option value="April" {% if selected_month=="April" %}selected{% endif %}>
+        April
+    </option>
+
+    <option value="May" {% if selected_month=="May" %}selected{% endif %}>
+        May
+    </option>
+
+    <option value="June" {% if selected_month=="June" %}selected{% endif %}>
+        June
+    </option>
+
+    <option value="July" {% if selected_month=="July" %}selected{% endif %}>
+        July
+    </option>
+
+    <option value="August" {% if selected_month=="August" %}selected{% endif %}>
+        August
+    </option>
+
+    <option value="September" {% if selected_month=="September" %}selected{% endif %}>
+        September
+    </option>
+
+    <option value="October" {% if selected_month=="October" %}selected{% endif %}>
+        October
+    </option>
+
+    <option value="November" {% if selected_month=="November" %}selected{% endif %}>
+        November
+    </option>
+
+    <option value="December" {% if selected_month=="December" %}selected{% endif %}>
+        December
+    </option>
+
+</select>
+
+                        
+                        
 
                     </div>
 
@@ -68,59 +108,212 @@
 
     <div class="row">
 
-        <div class="col-md-4">
+      <div class="row g-4 mb-4">
 
-            <div class="card bg-success text-white shadow-sm">
+    <div class="col-lg-4 col-md-6">
 
-                <div class="card-body">
+        <div class="card border-0 shadow-lg rounded-4 bg-success text-white">
 
-                    <h5>Total Income</h5>
+            <div class="card-body">
 
-                    <h2>
-                        ₹{{ total_income }}
-                    </h2>
+                <h6>Total Income</h6>
 
-                </div>
+                <h2>₹{{ total_income }}</h2>
 
             </div>
 
         </div>
 
-        <div class="col-md-4">
+    </div>
 
-            <div class="card bg-danger text-white shadow-sm">
+    <div class="col-lg-4 col-md-6">
 
-                <div class="card-body">
+        <div class="card border-0 shadow-lg rounded-4 bg-danger text-white">
 
-                    <h5>Total Expenses</h5>
+            <div class="card-body">
 
-                    <h2>
-                        ₹{{ total_expenses }}
-                    </h2>
+                <h6>Total Expenses</h6>
 
-                </div>
+                <h2>₹{{ total_expenses }}</h2>
 
             </div>
 
         </div>
 
-        <div class="col-md-4">
+    </div>
 
-            <div class="card bg-primary text-white shadow-sm">
+    <div class="col-lg-4 col-md-12">
 
-                <div class="card-body">
+        <div class="card border-0 shadow-lg rounded-4 bg-primary text-white">
 
-                    <h5>Total Savings</h5>
+            <div class="card-body">
 
-                    <h2>
-                        ₹{{ total_savings }}
-                    </h2>
+                <h6>Total Savings</h6>
 
-                </div>
+                <h2>₹{{ total_savings }}</h2>
 
             </div>
 
         </div>
+
+    </div>
+
+</div>
+<div class="card border-0 shadow-lg rounded-4 mb-4">
+
+    <div class="card-header bg-success text-white">
+
+        <h4 class="mb-0">
+            💰 Income History
+        </h4>
+
+    </div>
+
+    <div class="card-body table-responsive">
+
+        <table class="table table-hover align-middle">
+
+            <thead class="table-light">
+
+                <tr>
+
+                    <th>Source</th>
+                    <th>Amount</th>
+                    <th>Month</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% if income_data %}
+
+                    {% for item in income_data %}
+
+                    <tr>
+
+                        <td>{{ item.source }}</td>
+
+                        <td class="text-success fw-bold">
+                            ₹{{ item.amount }}
+                        </td>
+
+                        <td>{{ item.month }}</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="3" class="text-center text-muted">
+
+                            No Income Records Found
+
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+<div class="card border-0 shadow-lg rounded-4 mb-4">
+
+    <div class="card-header bg-danger text-white">
+
+        <h4 class="mb-0">
+            💸 Expense History
+        </h4>
+
+    </div>
+
+    <div class="card-body table-responsive">
+
+        <table class="table table-hover align-middle">
+
+            <thead class="table-light">
+
+                <tr>
+
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Month</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% if expense_data %}
+
+                    {% for item in expense_data %}
+
+                    <tr>
+
+                        <td>{{ item.category }}</td>
+
+                        <td class="text-danger fw-bold">
+                            ₹{{ item.amount }}
+                        </td>
+
+                        <td>{{ item.month }}</td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <tr>
+
+                        <td colspan="3" class="text-center text-muted">
+
+                            No Expense Records Found
+
+                        </td>
+
+                    </tr>
+
+                {% endif %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+<div class="d-flex gap-2 justify-content-end mb-4">
+
+    <button onclick="window.print()"
+            class="btn btn-dark">
+
+        <i class="bi bi-printer-fill"></i>
+
+        Print Report
+
+    </button>
+
+    <a href="/download_report"
+       class="btn btn-success">
+
+        <i class="bi bi-file-earmark-pdf-fill"></i>
+
+        Download PDF
+
+    </a>
+
+</div>
 
     </div>
 
