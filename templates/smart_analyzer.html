@@ -51,6 +51,42 @@
                 action="/analyze_statement"
                 method="POST"
                 enctype="multipart/form-data">
+                <div class="opening-balance-box">
+
+    <label for="opening_balance">
+        Opening Balance ₹
+    </label>
+
+    <input
+        type="number"
+        id="opening_balance"
+        name="opening_balance"
+        step="0.01"
+        placeholder="Example: 10000"
+        required
+    >
+
+</div>
+<div class="mb-4 text-start">
+
+    <label for="statement_password" class="form-label fw-bold">
+        🔐 Statement Password
+    </label>
+
+    <input
+        type="password"
+        id="statement_password"
+        name="statement_password"
+        class="form-control form-control-lg"
+        placeholder="Enter PDF statement password"
+        autocomplete="off"
+    >
+
+    <small class="text-muted">
+        Leave empty if your statement is not password protected.
+    </small>
+
+</div>
 
                 <input
 

@@ -1,5 +1,11 @@
 from flask import Flask, render_template, request, redirect, session, send_file, flash, jsonify
 from pymongo import MongoClient
+from parser_engine import process_dataframe
+from transaction_service import process_transactions, save_transactions
+from statement_reader import read_statement
+from statement_analysis import analyze_statement as analyze_statement_data
+from bson import ObjectId
+from column_mapper import normalize_columns
 from datetime import datetime
 from dotenv import load_dotenv
 from flask_bcrypt import Bcrypt
@@ -7,9 +13,32 @@ from email_utils import generate_otp, send_otp_email
 from datetime import datetime
 from calculations import calculate_months_needed
 from werkzeug.utils import secure_filename
+from pypdf import PdfReader, PdfWriter
+import tempfile
 import os
 import math
 import certifi
+import pandas as pd
+def make_json_safe(value):
+
+    
+
+    if isinstance(value, ObjectId):
+        return str(value)
+
+    if isinstance(value, dict):
+        return {
+            key: make_json_safe(val)
+            for key, val in value.items()
+        }
+
+    if isinstance(value, list):
+        return [
+            make_json_safe(item)
+            for item in value
+        ]
+
+    return value
 from io import BytesIO
 from flask import send_file
 from reportlab.platypus import (
@@ -33,7 +62,9 @@ from reportlab.platypus import KeepTogether
 load_dotenv()
 
 app = Flask(__name__)
-app.config["UPLOAD_FOLDER"] = "static/uploads"
+
+app.config["PROFILE_FOLDER"] = "static/uploads/profiles"
+app.config["STATEMENT_FOLDER"] = "static/uploads/statements"
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 app.secret_key = os.getenv("SECRET_KEY", "fallback-secret-for-local-use")
 bcrypt = Bcrypt(app)
@@ -187,119 +218,536 @@ def dashboard():
 
     username = session["username"]
 
-    # Current Month
+    # =====================================================
+    # SAFE NUMBER
+    # =====================================================
+
+    def safe_float(value):
+
+        try:
+
+            if value is None:
+                return 0.0
+
+            if isinstance(value, str):
+
+                value = (
+                    value
+                    .replace(",", "")
+                    .replace("₹", "")
+                    .replace("Rs.", "")
+                    .replace("Rs", "")
+                    .strip()
+                )
+
+                if value == "":
+                    return 0.0
+
+            number = float(value)
+
+            # NaN / Infinity protection
+            if math.isnan(number) or math.isinf(number):
+                return 0.0
+
+            return number
+
+        except (ValueError, TypeError):
+
+            return 0.0
+
+    # =====================================================
+    # CURRENT MONTH
+    # =====================================================
+
     current_month = datetime.now().strftime("%B")
 
-    # Budget
+    current_year = datetime.now().year
+
+    # =====================================================
+    # BUDGET
+    # =====================================================
+
     budget_doc = db.budget.find_one({
         "username": username,
         "month": current_month
     })
 
-    budget_amount = budget_doc["budget"] if budget_doc else 0
+    if budget_doc:
 
-    # Fetch Income & Expense
-    income_data = list(db.income.find({"username": username}))
-    expense_data = list(db.expenses.find({"username": username}))
+        budget_amount = safe_float(
+            budget_doc.get("budget", 0)
+        )
 
-    # Totals
-    total_income = sum(item["amount"] for item in income_data)
-    total_expenses = sum(item["amount"] for item in expense_data)
-    total_savings = total_income - total_expenses
+    else:
 
-    remaining_budget = budget_amount - total_expenses
+        budget_amount = 0.0
 
-    # Monthly Analytics
-    monthly_income = sum(
-        item["amount"]
-        for item in income_data
-        if item["month"] == current_month
+    # =====================================================
+    # MANUAL INCOME
+    # =====================================================
+
+    income_data = list(
+        db.income.find({
+            "username": username
+        })
     )
 
-    monthly_expenses = sum(
-        item["amount"]
-        for item in expense_data
-        if item["month"] == current_month
+    # =====================================================
+    # MANUAL EXPENSE
+    # =====================================================
+
+    expense_data = list(
+        db.expenses.find({
+            "username": username
+        })
     )
 
-    monthly_savings = monthly_income - monthly_expenses
+    # =====================================================
+    # IMPORTED BANK TRANSACTIONS
+    # =====================================================
 
-    # Financial Health Score
+    bank_transactions = list(
+        db.transactions.find({
+            "username": username
+        })
+    )
+
+    # =====================================================
+    # MANUAL TOTAL INCOME
+    # =====================================================
+
+    manual_income = 0.0
+
+    for item in income_data:
+
+        manual_income += safe_float(
+            item.get("amount", 0)
+        )
+
+    # =====================================================
+    # MANUAL TOTAL EXPENSE
+    # =====================================================
+
+    manual_expenses = 0.0
+
+    for item in expense_data:
+
+        manual_expenses += safe_float(
+            item.get("amount", 0)
+        )
+
+    # =====================================================
+    # BANK TOTAL INCOME
+    #
+    # Credit = Money received
+    # =====================================================
+
+    bank_income = 0.0
+
+    for transaction in bank_transactions:
+
+        bank_income += safe_float(
+            transaction.get("credit", 0)
+        )
+
+    # =====================================================
+    # BANK TOTAL EXPENSE
+    #
+    # Debit = Money spent
+    # =====================================================
+
+    bank_expenses = 0.0
+
+    for transaction in bank_transactions:
+
+        bank_expenses += safe_float(
+            transaction.get("debit", 0)
+        )
+
+    # =====================================================
+    # FINAL TOTALS
+    # =====================================================
+
+    total_income = (
+        manual_income +
+        bank_income
+    )
+
+    total_expenses = (
+        manual_expenses +
+        bank_expenses
+    )
+
+    total_savings = (
+        total_income -
+        total_expenses
+    )
+
+    # =====================================================
+    # REMAINING BUDGET
+    # =====================================================
+
+    remaining_budget = (
+        budget_amount -
+        total_expenses
+    )
+
+    # =====================================================
+    # MONTHLY MANUAL INCOME
+    # =====================================================
+
+    monthly_manual_income = 0.0
+
+    for item in income_data:
+
+        if item.get("month") == current_month:
+
+            monthly_manual_income += safe_float(
+                item.get("amount", 0)
+            )
+
+    # =====================================================
+    # MONTHLY MANUAL EXPENSE
+    # =====================================================
+
+    monthly_manual_expenses = 0.0
+
+    for item in expense_data:
+
+        if item.get("month") == current_month:
+
+            monthly_manual_expenses += safe_float(
+                item.get("amount", 0)
+            )
+
+    # =====================================================
+    # MONTHLY BANK TRANSACTIONS
+    # =====================================================
+
+    monthly_bank_income = 0.0
+    monthly_bank_expenses = 0.0
+
+    for transaction in bank_transactions:
+
+        date_value = str(
+            transaction.get("date", "")
+        ).strip()
+
+        transaction_date = None
+
+        # -----------------------------------------------
+        # Try different bank date formats
+        # -----------------------------------------------
+
+        date_formats = [
+            "%d-%b-%y",
+            "%d-%b-%Y",
+            "%d/%m/%Y",
+            "%d/%m/%y",
+            "%Y-%m-%d",
+            "%d-%m-%Y",
+            "%d-%m-%y"
+        ]
+
+        for date_format in date_formats:
+
+            try:
+
+                transaction_date = datetime.strptime(
+                    date_value,
+                    date_format
+                )
+
+                break
+
+            except ValueError:
+
+                continue
+
+        # -----------------------------------------------
+        # Check current month
+        # -----------------------------------------------
+
+        if transaction_date:
+
+            if (
+                transaction_date.month
+                == datetime.now().month
+                and
+                transaction_date.year
+                == current_year
+            ):
+
+                monthly_bank_income += safe_float(
+                    transaction.get("credit", 0)
+                )
+
+                monthly_bank_expenses += safe_float(
+                    transaction.get("debit", 0)
+                )
+
+    # =====================================================
+    # FINAL MONTHLY TOTALS
+    # =====================================================
+
+    monthly_income = (
+        monthly_manual_income +
+        monthly_bank_income
+    )
+
+    monthly_expenses = (
+        monthly_manual_expenses +
+        monthly_bank_expenses
+    )
+
+    monthly_savings = (
+        monthly_income -
+        monthly_expenses
+    )
+
+    # =====================================================
+    # FINANCIAL HEALTH SCORE
+    # =====================================================
+
     score = 0
 
     if total_income > 0:
 
-        savings_ratio = (total_savings / total_income) * 100
-        expense_ratio = (total_expenses / total_income) * 100
+        savings_ratio = (
+            total_savings /
+            total_income
+        ) * 100
 
+        expense_ratio = (
+            total_expenses /
+            total_income
+        ) * 100
+
+        # Savings score
         if savings_ratio >= 30:
+
             score += 40
+
         elif savings_ratio >= 20:
+
             score += 30
+
         elif savings_ratio >= 10:
+
             score += 20
+
         else:
+
             score += 10
 
+        # Expense score
         if expense_ratio <= 50:
+
             score += 30
+
         elif expense_ratio <= 70:
+
             score += 20
+
         else:
+
             score += 10
 
-    # Insurance Score
+    # =====================================================
+    # INSURANCE SCORE
+    # =====================================================
+
     insurance_count = db.insurance.count_documents({
         "username": username
     })
 
     if insurance_count > 0:
+
         score += 20
 
-    # Base Score
+    # Base score
     score += 10
 
     if score > 100:
+
         score = 100
 
-    # Recent Transactions
+    # =====================================================
+    # RECENT TRANSACTIONS
+    # =====================================================
+
     recent_transactions = []
 
+    # =====================================================
+    # MANUAL INCOME
+    # =====================================================
+
     for item in income_data:
+
         recent_transactions.append({
+
             "type": "Income",
-            "title": item["source"],
-            "amount": item["amount"],
-            "month": item["month"]
+
+            "title": item.get(
+                "source",
+                "Income"
+            ),
+
+            "amount": safe_float(
+                item.get("amount", 0)
+            ),
+
+            "month": item.get(
+                "month",
+                ""
+            )
         })
+
+    # =====================================================
+    # MANUAL EXPENSE
+    # =====================================================
 
     for item in expense_data:
+
         recent_transactions.append({
+
             "type": "Expense",
-            "title": item["category"],
-            "amount": item["amount"],
-            "month": item["month"]
+
+            "title": item.get(
+                "category",
+                "Expense"
+            ),
+
+            "amount": safe_float(
+                item.get("amount", 0)
+            ),
+
+            "month": item.get(
+                "month",
+                ""
+            )
         })
 
-    recent_transactions = recent_transactions[::-1][:10]
+    # =====================================================
+    # BANK TRANSACTIONS
+    # =====================================================
 
-    return render_template(
-        "dashboard.html",
-        income_data=income_data,
-        expense_data=expense_data,
-        total_income=total_income,
-        total_expenses=total_expenses,
-        total_savings=total_savings,
-        financial_score=score,
-        recent_transactions=recent_transactions,
-        current_month=current_month,
-        monthly_income=monthly_income,
-        monthly_expenses=monthly_expenses,
-        monthly_savings=monthly_savings,
-        budget_amount=budget_amount,
-        remaining_budget=remaining_budget
+    for transaction in bank_transactions:
+
+        debit = safe_float(
+            transaction.get("debit", 0)
+        )
+
+        credit = safe_float(
+            transaction.get("credit", 0)
+        )
+
+        description = transaction.get(
+            "description",
+            "Bank Transaction"
+        )
+
+        date = transaction.get(
+            "date",
+            ""
+        )
+
+        # -----------------------------------------------
+        # BANK CREDIT
+        # -----------------------------------------------
+
+        if credit > 0:
+
+            recent_transactions.append({
+
+                "type": "Income",
+
+                "title": description,
+
+                "amount": credit,
+
+                "month": date
+            })
+
+        # -----------------------------------------------
+        # BANK DEBIT
+        # -----------------------------------------------
+
+        if debit > 0:
+
+            recent_transactions.append({
+
+                "type": "Expense",
+
+                "title": description,
+
+                "amount": debit,
+
+                "month": date
+            })
+
+    # =====================================================
+    # LATEST 10 TRANSACTIONS
+    # =====================================================
+
+    recent_transactions = (
+        recent_transactions[::-1][:10]
     )
 
+    # =====================================================
+    # DEBUG
+    # =====================================================
+
+    print("\n========== DASHBOARD TOTALS ==========")
+
+    print("Manual Income   :", manual_income)
+    print("Bank Income     :", bank_income)
+
+    print("Manual Expenses :", manual_expenses)
+    print("Bank Expenses   :", bank_expenses)
+
+    print("TOTAL INCOME    :", total_income)
+    print("TOTAL EXPENSES  :", total_expenses)
+    print("TOTAL SAVINGS   :", total_savings)
+
+    print("======================================\n")
+
+    # =====================================================
+    # RENDER DASHBOARD
+    # =====================================================
+
+    return render_template(
+
+        "dashboard.html",
+
+        income_data=income_data,
+
+        expense_data=expense_data,
+
+        bank_transactions=bank_transactions,
+
+        total_income=total_income,
+
+        total_expenses=total_expenses,
+
+        total_savings=total_savings,
+
+        financial_score=score,
+
+        recent_transactions=recent_transactions,
+
+        current_month=current_month,
+
+        monthly_income=monthly_income,
+
+        monthly_expenses=monthly_expenses,
+
+        monthly_savings=monthly_savings,
+
+        budget_amount=budget_amount,
+
+        remaining_budget=remaining_budget
+    )
 @app.route('/goal_planner')
 def goal_planner_page():
 
@@ -1154,8 +1602,8 @@ def upload_profile():
     filename = secure_filename(file.filename)
 
     filepath = os.path.join(
-        app.config["UPLOAD_FOLDER"],
-        filename
+     app.config["PROFILE_FOLDER"],
+    filename
     )
 
     file.save(filepath)
@@ -1225,16 +1673,759 @@ def settings():
         return redirect("/login")
 
     return render_template("settings.html")
-@app.route('/smart_analyzer')
-def smart_analyzer():
+@app.route("/analyze_statement", methods=["POST"])
+def analyze_statement():
+
+    # ============================================
+    # STEP 1 - LOGIN CHECK
+    # ============================================
 
     if not is_logged_in():
-        return redirect('/login')
+        return redirect("/login")
 
-    return render_template("smart_analyzer.html")
+    # ============================================
+    # STEP 2 - GET UPLOADED FILE
+    # ============================================
 
+    file = request.files.get("statement")
 
+    if file is None or file.filename == "":
+        flash(
+            "Please upload a bank statement.",
+            "warning"
+        )
+        return redirect("/smart_analyzer")
 
+    # ============================================
+    # STEP 3 - GET OPENING BALANCE
+    # ============================================
+
+    opening_balance = request.form.get(
+        "opening_balance",
+        "0"
+    )
+
+    try:
+
+        opening_balance = float(
+            opening_balance
+        )
+
+    except (ValueError, TypeError):
+
+        opening_balance = 0.0
+
+    # ============================================
+    # STEP 4 - GET PDF PASSWORD
+    # ============================================
+
+    statement_password = request.form.get(
+        "statement_password",
+        ""
+    ).strip()
+
+    # ============================================
+    # FILE PATH VARIABLES
+    # ============================================
+
+    filepath = None
+    decrypted_filepath = None
+
+    try:
+
+        # ========================================
+        # STEP 5 - SECURE FILE NAME
+        # ========================================
+
+        filename = secure_filename(
+            file.filename
+        )
+
+        if not filename:
+
+            flash(
+                "Invalid file name.",
+                "danger"
+            )
+
+            return redirect(
+                "/smart_analyzer"
+            )
+
+        # ========================================
+        # STEP 6 - CREATE UPLOAD FOLDER
+        # ========================================
+
+        os.makedirs(
+            app.config["STATEMENT_FOLDER"],
+            exist_ok=True
+        )
+
+        # ========================================
+        # STEP 7 - CREATE FILE PATH
+        # ========================================
+
+        filepath = os.path.join(
+            app.config["STATEMENT_FOLDER"],
+            filename
+        )
+
+        # ========================================
+        # STEP 8 - SAVE UPLOADED FILE
+        # ========================================
+
+        file.save(filepath)
+
+        print(
+            "\n========== STATEMENT PROCESSING =========="
+        )
+
+        print(
+            "File:",
+            filename
+        )
+
+        # ========================================
+        # STEP 9 - PDF PASSWORD HANDLING
+        # ========================================
+
+        file_to_read = filepath
+
+        if filename.lower().endswith(".pdf"):
+
+            print(
+                "PDF detected."
+            )
+
+            try:
+
+                # --------------------------------
+                # Open PDF
+                # --------------------------------
+
+                reader = PdfReader(
+                    filepath
+                )
+
+                # --------------------------------
+                # Check encryption
+                # --------------------------------
+
+                if reader.is_encrypted:
+
+                    print(
+                        "Password protected PDF detected."
+                    )
+
+                    # ----------------------------
+                    # Password missing
+                    # ----------------------------
+
+                    if not statement_password:
+
+                        flash(
+                            "This PDF is password protected. Please enter the statement password.",
+                            "warning"
+                        )
+
+                        return redirect(
+                            "/smart_analyzer"
+                        )
+
+                    # ----------------------------
+                    # Try password
+                    # ----------------------------
+
+                    decrypt_result = reader.decrypt(
+                        statement_password
+                    )
+
+                    if decrypt_result == 0:
+
+                        flash(
+                            "Incorrect statement password. Please try again.",
+                            "danger"
+                        )
+
+                        return redirect(
+                            "/smart_analyzer"
+                        )
+
+                    print(
+                        "PDF password verified successfully."
+                    )
+
+                    # ----------------------------
+                    # Temporary decrypted file
+                    # ----------------------------
+
+                    decrypted_filename = (
+                        "decrypted_" + filename
+                    )
+
+                    decrypted_filepath = os.path.join(
+                        app.config["STATEMENT_FOLDER"],
+                        decrypted_filename
+                    )
+
+                    # ----------------------------
+                    # Create PDF writer
+                    # ----------------------------
+
+                    writer = PdfWriter()
+
+                    for page in reader.pages:
+
+                        writer.add_page(
+                            page
+                        )
+
+                    # ----------------------------
+                    # Save decrypted PDF
+                    # ----------------------------
+
+                    with open(
+                        decrypted_filepath,
+                        "wb"
+                    ) as decrypted_file:
+
+                        writer.write(
+                            decrypted_file
+                        )
+
+                    file_to_read = (
+                        decrypted_filepath
+                    )
+
+                    print(
+                        "Decrypted PDF created successfully."
+                    )
+
+                else:
+
+                    print(
+                        "PDF is not password protected."
+                    )
+
+            except Exception as pdf_error:
+
+                print(
+                    "\n========== PDF ERROR =========="
+                )
+
+                print(
+                    pdf_error
+                )
+
+                flash(
+                    f"Unable to open PDF: {pdf_error}",
+                    "danger"
+                )
+
+                return redirect(
+                    "/smart_analyzer"
+                )
+
+        # ========================================
+        # STEP 10 - READ STATEMENT
+        # ========================================
+
+        dataframe = read_statement(
+            file_to_read
+        )
+
+        # ========================================
+        # STEP 11 - PROCESS STATEMENT
+        # ========================================
+
+        transactions, bank = process_dataframe(
+            dataframe,
+            file_to_read,
+            opening_balance=opening_balance
+        )
+
+        print(
+            "\nDetected Bank:",
+            bank
+        )
+
+        print(
+            "Transactions extracted:",
+            len(transactions)
+        )
+
+        # ========================================
+        # STEP 12 - CLEAN TRANSACTIONS
+        # ========================================
+
+        clean_transactions = []
+
+        for transaction in transactions:
+
+            clean_transaction = {}
+
+            # ------------------------------------
+            # Make sure transaction is dictionary
+            # ------------------------------------
+
+            if not isinstance(
+                transaction,
+                dict
+            ):
+
+                continue
+
+            # ------------------------------------
+            # Clean every field
+            # ------------------------------------
+
+            for key, value in transaction.items():
+
+                # -------------------------------
+                # NEVER send MongoDB _id
+                # -------------------------------
+
+                if key == "_id":
+                    continue
+
+                # -------------------------------
+                # ObjectId
+                # -------------------------------
+
+                if isinstance(
+                    value,
+                    ObjectId
+                ):
+
+                    value = str(
+                        value
+                    )
+
+                # -------------------------------
+                # Pandas / NumPy values
+                # -------------------------------
+
+                elif hasattr(
+                    value,
+                    "item"
+                ):
+
+                    try:
+
+                        value = value.item()
+
+                    except Exception:
+
+                        value = str(
+                            value
+                        )
+
+                # -------------------------------
+                # Datetime
+                # -------------------------------
+
+                elif isinstance(
+                    value,
+                    datetime
+                ):
+
+                    value = value.isoformat()
+
+                # -------------------------------
+                # None
+                # -------------------------------
+
+                elif value is None:
+
+                    value = ""
+
+                # -------------------------------
+                # Save value
+                # -------------------------------
+
+                clean_transaction[
+                    key
+                ] = value
+
+            # ==================================
+            # STANDARD FIELDS
+            # ==================================
+
+            # ----------------------------------
+            # Date
+            # ----------------------------------
+
+            clean_transaction[
+                "date"
+            ] = str(
+                clean_transaction.get(
+                    "date",
+                    ""
+                )
+            )
+
+            # ----------------------------------
+            # Description
+            # ----------------------------------
+
+            clean_transaction[
+                "description"
+            ] = str(
+                clean_transaction.get(
+                    "description",
+                    ""
+                )
+            )
+
+            # ----------------------------------
+            # Debit
+            # ----------------------------------
+
+            try:
+
+                clean_transaction[
+                    "debit"
+                ] = float(
+                    clean_transaction.get(
+                        "debit",
+                        0
+                    ) or 0
+                )
+
+            except (
+                ValueError,
+                TypeError
+            ):
+
+                clean_transaction[
+                    "debit"
+                ] = 0.0
+
+            # ----------------------------------
+            # Credit
+            # ----------------------------------
+
+            try:
+
+                clean_transaction[
+                    "credit"
+                ] = float(
+                    clean_transaction.get(
+                        "credit",
+                        0
+                    ) or 0
+                )
+
+            except (
+                ValueError,
+                TypeError
+            ):
+
+                clean_transaction[
+                    "credit"
+                ] = 0.0
+
+            # ----------------------------------
+            # Balance
+            # ----------------------------------
+
+            try:
+
+                clean_transaction[
+                    "balance"
+                ] = float(
+                    clean_transaction.get(
+                        "balance",
+                        0
+                    ) or 0
+                )
+
+            except (
+                ValueError,
+                TypeError
+            ):
+
+                clean_transaction[
+                    "balance"
+                ] = 0.0
+
+            # ----------------------------------
+            # Category
+            # ----------------------------------
+
+            clean_transaction[
+                "category"
+            ] = str(
+                clean_transaction.get(
+                    "category",
+                    "OTHERS"
+                )
+            ).upper().strip()
+
+            # ==================================
+            # ADD CLEAN TRANSACTION
+            # ==================================
+
+            clean_transactions.append(
+                clean_transaction
+            )
+
+        # ========================================
+        # STEP 13 - SAVE TO MONGODB
+        # ========================================
+
+        if clean_transactions:
+
+            save_transactions(
+                db,
+                session["username"],
+                clean_transactions
+            )
+
+            print(
+                "Transactions saved:",
+                len(clean_transactions)
+            )
+
+        else:
+
+            print(
+                "No transactions found."
+            )
+
+        # ========================================
+        # STEP 14 - FINAL JSON SAFE COPY
+        # ========================================
+        #
+        # This is extra protection for Jinja
+        # {{ transactions | tojson }}
+        #
+        # ========================================
+
+        preview_transactions = []
+
+        for transaction in clean_transactions:
+
+            preview = {}
+
+            for key, value in transaction.items():
+
+                # --------------------------------
+                # Never send _id
+                # --------------------------------
+
+                if key == "_id":
+                    continue
+
+                # --------------------------------
+                # ObjectId
+                # --------------------------------
+
+                if isinstance(
+                    value,
+                    ObjectId
+                ):
+
+                    value = str(
+                        value
+                    )
+
+                # --------------------------------
+                # Datetime
+                # --------------------------------
+
+                elif isinstance(
+                    value,
+                    datetime
+                ):
+
+                    value = value.isoformat()
+
+                # --------------------------------
+                # Pandas / NumPy
+                # --------------------------------
+
+                elif hasattr(
+                    value,
+                    "item"
+                ):
+
+                    try:
+
+                        value = value.item()
+
+                    except Exception:
+
+                        value = str(
+                            value
+                        )
+
+                # --------------------------------
+                # None
+                # --------------------------------
+
+                elif value is None:
+
+                    value = ""
+
+                # --------------------------------
+                # JSON-safe value
+                # --------------------------------
+
+                preview[
+                    key
+                ] = value
+
+            preview_transactions.append(
+                preview
+            )
+
+        # ========================================
+        # STEP 15 - SHOW TRANSACTION PREVIEW
+        # ========================================
+
+        return render_template(
+            "transaction_preview.html",
+
+            transactions=preview_transactions,
+
+            clean_transactions=preview_transactions,
+
+            bank=bank
+        )
+
+    # ============================================
+    # ERROR HANDLING
+    # ============================================
+
+    except Exception as error:
+
+        import traceback
+
+        print(
+            "\n========== STATEMENT ERROR =========="
+        )
+
+        traceback.print_exc()
+
+        print(
+            "=====================================\n"
+        )
+
+        flash(
+            f"Error reading statement: {error}",
+            "danger"
+        )
+
+        return redirect(
+            "/smart_analyzer"
+        )
+
+    # ============================================
+    # STEP 16 - DELETE TEMP DECRYPTED PDF
+    # ============================================
+
+    finally:
+
+        if decrypted_filepath:
+
+            try:
+
+                if os.path.exists(
+                    decrypted_filepath
+                ):
+
+                    os.remove(
+                        decrypted_filepath
+                    )
+
+                    print(
+                        "Temporary decrypted PDF deleted."
+                    )
+
+            except Exception as cleanup_error:
+
+                print(
+                    "Temporary file cleanup failed:",
+                    cleanup_error
+                )
+@app.route("/import_transactions", methods=["POST"])
+def import_transactions():
+
+    # Check login
+    if not is_logged_in():
+        return redirect("/login")
+
+    try:
+
+        # Get transactions from form
+        transactions_json = request.form.get(
+            "transactions",
+            "[]"
+        )
+
+        import json
+
+        transactions = json.loads(
+            transactions_json
+        )
+
+        # Check transactions
+        if not transactions:
+
+            flash(
+                "No transactions found to import.",
+                "warning"
+            )
+
+            return redirect("/smart_analyzer")
+
+        # Save username
+        username = session["username"]
+
+        # Save transactions to MongoDB
+        save_transactions(
+            db=db,
+            username=username,
+            transactions=transactions
+        )
+
+        flash(
+            f"{len(transactions)} transactions imported successfully!",
+            "success"
+        )
+
+        return redirect("/dashboard")
+
+    except Exception as error:
+
+        print("\n========== IMPORT ERROR ==========")
+        print(error)
+        print("==================================\n")
+
+        flash(
+            f"Error importing transactions: {error}",
+            "danger"
+        )
+
+        return redirect("/smart_analyzer")
+@app.route("/statement_analysis")
+def statement_analysis_page():
+
+    if not is_logged_in():
+        return redirect("/login")
+
+    username = session["username"]
+
+    analysis = analyze_statement(
+        db,
+        username
+    )
+
+    return render_template(
+        "statement_analysis.html",
+        analysis=analysis
+    )
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)

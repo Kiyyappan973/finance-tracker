@@ -4,141 +4,256 @@
 Dashboard
 {% endblock %}
 
+
 {% block extra_css %}
 
 <style>
 
-.dashboard-hero{
+/* =====================================================
+   DASHBOARD
+===================================================== */
 
-    background:linear-gradient(135deg,#2563eb,#4f46e5);
+.dashboard-wrapper {
+    padding-bottom: 50px;
+}
 
-    border-radius:25px;
 
-    padding:40px;
+/* =====================================================
+   HERO
+===================================================== */
 
-    color:white;
+.dashboard-hero {
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    border-radius: 25px;
+    padding: 40px;
+    color: white;
+    overflow: hidden;
+    position: relative;
+}
 
-    overflow:hidden;
+.dashboard-hero::before {
+    content: "";
+    position: absolute;
+    width: 250px;
+    height: 250px;
+    background: rgba(255,255,255,.08);
+    border-radius: 50%;
+    right: -80px;
+    top: -80px;
+}
 
-    position:relative;
+.dashboard-hero::after {
+    content: "";
+    position: absolute;
+    width: 180px;
+    height: 180px;
+    background: rgba(255,255,255,.06);
+    border-radius: 50%;
+    right: 120px;
+    bottom: -80px;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+
+/* =====================================================
+   HERO MINI STATS
+===================================================== */
+
+.hero-stat {
+    padding-right: 15px;
+}
+
+.hero-stat small {
+    opacity: .75;
+}
+
+.hero-stat h4 {
+    font-weight: 700;
+    margin-top: 5px;
+    font-size: 20px;
+}
+
+
+/* =====================================================
+   STAT CARDS
+===================================================== */
+
+.stat-card {
+    border: none;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 12px 30px rgba(0,0,0,.08);
+    transition: .3s;
+    height: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.stat-card:hover {
+    transform: translateY(-6px);
+}
+
+.stat-content {
+    min-width: 0;
+    max-width: calc(100% - 80px);
+}
+
+.stat-content p {
+    margin-bottom: 8px;
+}
+
+.stat-amount {
+    font-size: clamp(20px, 2vw, 30px);
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0;
+
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* =====================================================
+   ICON CIRCLE
+===================================================== */
+
+.icon-circle {
+    width: 65px;
+    height: 65px;
+    min-width: 65px;
+    border-radius: 50%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 28px;
+}
+
+
+/* =====================================================
+   SECTION CARDS
+===================================================== */
+
+.section-card {
+    border: none;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 10px 28px rgba(0,0,0,.07);
+}
+
+
+/* =====================================================
+   PROGRESS BAR
+===================================================== */
+
+.custom-progress {
+    height: 12px;
+    border-radius: 20px;
+}
+
+
+/* =====================================================
+   TRANSACTION CARD
+===================================================== */
+
+.transaction-card {
+    border: none;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 10px 28px rgba(0,0,0,.07);
+}
+
+.transaction-table {
+    min-width: 600px;
+}
+
+.transaction-table th {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.transaction-table td {
+    vertical-align: middle;
+}
+
+
+/* =====================================================
+   QUICK ACTIONS
+===================================================== */
+
+.quick-card {
+    border: none;
+    border-radius: 18px;
+    transition: .3s;
+    cursor: pointer;
+    text-align: center;
+    padding: 25px;
+}
+
+.quick-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 30px rgba(0,0,0,.12);
+}
+
+.quick-card i {
+    font-size: 35px;
+}
+
+
+/* =====================================================
+   CHART
+===================================================== */
+
+.chart-container {
+    position: relative;
+    height: 320px;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 992px) {
+
+    .dashboard-hero {
+        padding: 30px;
+    }
+
+    .stat-amount {
+        font-size: 24px;
+    }
 
 }
 
-.dashboard-hero::before{
 
-    content:"";
+@media (max-width: 576px) {
 
-    position:absolute;
+    .dashboard-hero {
+        padding: 25px;
+        border-radius: 20px;
+    }
 
-    width:250px;
+    .dashboard-hero h2 {
+        font-size: 24px;
+    }
 
-    height:250px;
+    .stat-amount {
+        font-size: 21px;
+    }
 
-    background:rgba(255,255,255,.08);
-
-    border-radius:50%;
-
-    right:-80px;
-
-    top:-80px;
-
-}
-
-.dashboard-hero::after{
-
-    content:"";
-
-    position:absolute;
-
-    width:180px;
-
-    height:180px;
-
-    background:rgba(255,255,255,.06);
-
-    border-radius:50%;
-
-    right:120px;
-
-    bottom:-80px;
-
-}
-
-.stat-card{
-
-    border:none;
-
-    border-radius:20px;
-
-    background:white;
-
-    box-shadow:0 12px 30px rgba(0,0,0,.08);
-
-    transition:.3s;
-
-    height:100%;
-
-}
-
-.stat-card:hover{
-
-    transform:translateY(-8px);
-
-}
-
-.icon-circle{
-
-    width:65px;
-
-    height:65px;
-
-    border-radius:50%;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:28px;
-
-}
-
-.quick-card{
-
-    border:none;
-
-    border-radius:18px;
-
-    transition:.3s;
-
-    cursor:pointer;
-
-    text-align:center;
-
-    padding:25px;
-
-}
-
-.quick-card:hover{
-
-    transform:translateY(-6px);
-
-    box-shadow:0 12px 30px rgba(0,0,0,.12);
-
-}
-
-.quick-card i{
-
-    font-size:35px;
-
-}
-
-.transaction-card{
-
-    border:none;
-
-    border-radius:18px;
+    .icon-circle {
+        width: 55px;
+        height: 55px;
+        min-width: 55px;
+        font-size: 23px;
+    }
 
 }
 
@@ -146,277 +261,318 @@ Dashboard
 
 {% endblock %}
 
+
+
 {% block content %}
 
-<div class="container-fluid">
+<div class="container-fluid dashboard-wrapper">
+
+
+<!-- =====================================================
+     HERO
+===================================================== -->
 
 <div class="dashboard-hero mb-4">
 
-<div class="row align-items-center">
+    <div class="hero-content">
 
-<div class="col-lg-8">
+        <div class="row align-items-center">
 
-<h6 class="text-white-50">
-Welcome Back 👋
-</h6>
+            <div class="col-lg-8">
 
-<h2 class="fw-bold mb-3">
+                <h6 class="text-white-50">
+                    Welcome Back 👋
+                </h6>
 
-Hello,
+                <h2 class="fw-bold mb-3">
+                    Hello, {{ session.username }}
+                </h2>
 
-{{ session.username }}
+                <p class="mb-4">
+                    Manage your finances smarter.
+                    Track your income, expenses,
+                    savings, goals, insurance and budget
+                    in one place.
+                </p>
 
-</h2>
 
-<p class="mb-4">
+                <!-- Hero Statistics -->
 
-Manage your finances smarter.
+                <div class="row g-3">
 
-Track every income,
+                    <div class="col-6 col-md-3">
 
-expense,
+                        <div class="hero-stat">
 
-goal,
+                            <small>
+                                Total Income
+                            </small>
 
-insurance and budget in one place.
+                            <h4>
+                                ₹{{ "{:,.2f}".format(total_income|float) }}
+                            </h4>
 
-</p>
+                        </div>
 
-<div class="row">
+                    </div>
 
-<div class="col-6 col-md-3">
 
-<small>Total Income</small>
+                    <div class="col-6 col-md-3">
 
-<h4>
+                        <div class="hero-stat">
 
-₹{{ total_income }}
+                            <small>
+                                Total Expenses
+                            </small>
 
-</h4>
+                            <h4>
+                                ₹{{ "{:,.2f}".format(total_expenses|float) }}
+                            </h4>
 
-</div>
+                        </div>
 
-<div class="col-6 col-md-3">
+                    </div>
 
-<small>Total Expenses</small>
 
-<h4>
+                    <div class="col-6 col-md-3">
 
-₹{{ total_expenses }}
+                        <div class="hero-stat">
 
-</h4>
+                            <small>
+                                Total Savings
+                            </small>
 
-</div>
+                            <h4>
+                                ₹{{ "{:,.2f}".format(total_savings|float) }}
+                            </h4>
 
-<div class="col-6 col-md-3">
+                        </div>
 
-<small>Total Savings</small>
+                    </div>
 
-<h4>
 
-₹{{ total_savings }}
+                    <div class="col-6 col-md-3">
 
-</h4>
+                        <div class="hero-stat">
 
-</div>
+                            <small>
+                                Health
+                            </small>
 
-<div class="col-6 col-md-3">
+                            <h4>
+                                {{ financial_score }}%
+                            </h4>
 
-<small>Health</small>
+                        </div>
 
-<h4>
+                    </div>
 
-{{ financial_score }}%
+                </div>
 
-</h4>
+            </div>
 
-</div>
 
-</div>
+            <div class="col-lg-4 text-center d-none d-lg-block">
 
-</div>
+                <i class="bi bi-wallet2"
+                   style="font-size:170px;opacity:.15;">
+                </i>
 
-<div class="col-lg-4 text-center">
+            </div>
 
-<i class="bi bi-wallet2"
+        </div>
 
-style="font-size:170px;
-opacity:.15;">
-
-</i>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="row g-4">
-
-<div class="col-lg-3 col-md-6">
-
-<div class="stat-card">
-
-<div class="card-body p-4">
-
-<div class="d-flex justify-content-between">
-
-<div>
-
-<p class="text-muted">
-
-Income
-
-</p>
-
-<h3 class="fw-bold text-success">
-
-₹{{ total_income }}
-
-</h3>
+    </div>
 
 </div>
 
-<div class="icon-circle bg-success bg-opacity-10">
 
-<i class="bi bi-cash-stack text-success"></i>
+
+<!-- =====================================================
+     MAIN STAT CARDS
+===================================================== -->
+
+<div class="row g-4 mb-4">
+
+
+    <!-- INCOME -->
+
+    <div class="col-lg-3 col-md-6">
+
+        <div class="stat-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between">
+
+                    <div class="stat-content">
+
+                        <p class="text-muted">
+                            Total Income
+                        </p>
+
+                        <h3 class="stat-amount text-success">
+
+                            ₹{{ "{:,.2f}".format(total_income|float) }}
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="icon-circle bg-success bg-opacity-10">
+
+                        <i class="bi bi-cash-stack text-success"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- EXPENSE -->
+
+    <div class="col-lg-3 col-md-6">
+
+        <div class="stat-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between">
+
+                    <div class="stat-content">
+
+                        <p class="text-muted">
+                            Total Expenses
+                        </p>
+
+                        <h3 class="stat-amount text-danger">
+
+                            ₹{{ "{:,.2f}".format(total_expenses|float) }}
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="icon-circle bg-danger bg-opacity-10">
+
+                        <i class="bi bi-wallet2 text-danger"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- SAVINGS -->
+
+    <div class="col-lg-3 col-md-6">
+
+        <div class="stat-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between">
+
+                    <div class="stat-content">
+
+                        <p class="text-muted">
+                            Total Savings
+                        </p>
+
+                        <h3 class="stat-amount text-primary">
+
+                            ₹{{ "{:,.2f}".format(total_savings|float) }}
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="icon-circle bg-primary bg-opacity-10">
+
+                        <i class="bi bi-bank text-primary"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- BUDGET -->
+
+    <div class="col-lg-3 col-md-6">
+
+        <div class="stat-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between">
+
+                    <div class="stat-content">
+
+                        <p class="text-muted">
+                            Budget Left
+                        </p>
+
+                        <h3 class="stat-amount text-warning">
+
+                            ₹{{ "{:,.2f}".format(remaining_budget|float) }}
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="icon-circle bg-warning bg-opacity-10">
+
+                        <i class="bi bi-pie-chart text-warning"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 </div>
 
-</div>
 
-</div>
 
-</div>
+<!-- =====================================================
+     BUDGET + FINANCIAL HEALTH
+===================================================== -->
 
-</div>
+<div class="row g-4 mb-4">
 
-<div class="col-lg-3 col-md-6">
 
-<div class="stat-card">
-
-<div class="card-body p-4">
-
-<div class="d-flex justify-content-between">
-
-<div>
-
-<p class="text-muted">
-
-Expenses
-
-</p>
-
-<h3 class="fw-bold text-danger">
-
-₹{{ total_expenses }}
-
-</h3>
-
-</div>
-
-<div class="icon-circle bg-danger bg-opacity-10">
-
-<i class="bi bi-wallet2 text-danger"></i>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-lg-3 col-md-6">
-
-<div class="stat-card">
-
-<div class="card-body p-4">
-
-<div class="d-flex justify-content-between">
-
-<div>
-
-<p class="text-muted">
-
-Savings
-
-</p>
-
-<h3 class="fw-bold text-primary">
-
-₹{{ total_savings }}
-
-</h3>
-
-</div>
-
-<div class="icon-circle bg-primary bg-opacity-10">
-
-<i class="bi bi-bank text-primary"></i>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="col-lg-3 col-md-6">
-
-<div class="stat-card">
-
-<div class="card-body p-4">
-
-<div class="d-flex justify-content-between">
-
-<div>
-
-<p class="text-muted">
-
-Budget Left
-
-</p>
-
-<h3 class="fw-bold text-warning">
-
-₹{{ remaining_budget }}
-
-</h3>
-
-</div>
-
-<div class="icon-circle bg-warning bg-opacity-10">
-
-<i class="bi bi-pie-chart text-warning"></i>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-<!-- ========================= -->
-<!-- Budget + Financial Health -->
-<!-- ========================= -->
-
-<div class="row g-4 mt-2">
-
-    <!-- Budget -->
+    <!-- BUDGET -->
 
     <div class="col-lg-6">
 
-        <div class="card stat-card">
+        <div class="section-card h-100">
 
             <div class="card-body p-4">
 
@@ -432,6 +588,7 @@ Budget Left
 
                 </div>
 
+
                 <div class="mb-3">
 
                     <small class="text-muted">
@@ -439,10 +596,13 @@ Budget Left
                     </small>
 
                     <h3 class="fw-bold">
-                        ₹{{ budget_amount }}
+
+                        ₹{{ "{:,.2f}".format(budget_amount|float) }}
+
                     </h3>
 
                 </div>
+
 
                 <div class="d-flex justify-content-between mb-2">
 
@@ -451,47 +611,56 @@ Budget Left
                     </span>
 
                     <strong>
-                        ₹{{ total_expenses }}
+
+                        ₹{{ "{:,.2f}".format(total_expenses|float) }}
+
                     </strong>
 
                 </div>
 
-                <div class="progress mb-3"
-                     style="height:12px;border-radius:10px;">
+
+                <!-- Budget Progress -->
+
+                <div class="progress custom-progress mb-3">
 
                     {% if budget_amount > 0 %}
 
-                    {% set percent=(total_expenses / budget_amount * 100) %}
+                        {% set percent =
+                            (total_expenses / budget_amount * 100)
+                        %}
 
-                    <div class="progress-bar bg-success"
-
-                         style="width:{{ percent if percent<=100 else 100 }}%;">
-
-                    </div>
+                        <div
+                            class="progress-bar
+                            {% if percent > 100 %}
+                                bg-danger
+                            {% else %}
+                                bg-success
+                            {% endif %}"
+                            style="width:
+                            {{ percent if percent <= 100 else 100 }}%;">
+                        </div>
 
                     {% else %}
 
-                    <div class="progress-bar bg-secondary"
-
-                         style="width:0%;">
-
-                    </div>
+                        <div
+                            class="progress-bar bg-secondary"
+                            style="width:0%;">
+                        </div>
 
                     {% endif %}
 
                 </div>
 
+
                 <div class="d-flex justify-content-between">
 
                     <span class="text-muted">
-
                         Remaining Budget
-
                     </span>
 
                     <strong class="text-primary">
 
-                        ₹{{ remaining_budget }}
+                        ₹{{ "{:,.2f}".format(remaining_budget|float) }}
 
                     </strong>
 
@@ -503,29 +672,28 @@ Budget Left
 
     </div>
 
-    <!-- Financial Health -->
+
+
+    <!-- FINANCIAL HEALTH -->
 
     <div class="col-lg-6">
 
-        <div class="card stat-card">
+        <div class="section-card h-100">
 
             <div class="card-body p-4">
 
                 <div class="d-flex justify-content-between align-items-center">
 
                     <h4 class="fw-bold">
-
                         📈 Financial Health
-
                     </h4>
 
                     <span class="badge bg-success">
-
                         {{ financial_score }}%
-
                     </span>
 
                 </div>
+
 
                 <div class="text-center py-4">
 
@@ -536,36 +704,38 @@ Budget Left
                     </div>
 
                     <p class="text-muted">
-
                         Overall Financial Score
-
                     </p>
 
                 </div>
 
+
                 {% if financial_score >= 80 %}
 
-                <div class="alert alert-success mb-0">
+                    <div class="alert alert-success mb-0">
 
-                    🎉 Excellent! Your finances are in great shape.
+                        🎉 Excellent!
+                        Your finances are in great shape.
 
-                </div>
+                    </div>
 
                 {% elif financial_score >= 60 %}
 
-                <div class="alert alert-warning mb-0">
+                    <div class="alert alert-warning mb-0">
 
-                    👍 Good progress. Keep improving your savings.
+                        👍 Good progress.
+                        Keep improving your savings.
 
-                </div>
+                    </div>
 
                 {% else %}
 
-                <div class="alert alert-danger mb-0">
+                    <div class="alert alert-danger mb-0">
 
-                    ⚠️ Focus on reducing expenses and increasing savings.
+                        ⚠️ Focus on reducing expenses
+                        and increasing savings.
 
-                </div>
+                    </div>
 
                 {% endif %}
 
@@ -577,29 +747,62 @@ Budget Left
 
 </div>
 
-<!-- ========================= -->
-<!-- Charts -->
-<!-- ========================= -->
 
-<!-- ========================= -->
-<!-- Recent Transactions -->
-<!-- ========================= -->
 
-<div class="card transaction-card mt-4">
+<!-- =====================================================
+     CHART
+===================================================== -->
+
+<div class="section-card mb-4">
+
+    <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+
+                <h4 class="fw-bold mb-1">
+                    📊 Financial Overview
+                </h4>
+
+                <p class="text-muted mb-0">
+                    Income vs Expenses vs Savings
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-container">
+
+            <canvas id="financeChart"></canvas>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     RECENT TRANSACTIONS
+===================================================== -->
+
+<div class="transaction-card mb-4">
 
     <div class="card-body p-4">
 
         <div class="d-flex justify-content-between align-items-center mb-4">
 
             <h4 class="fw-bold mb-0">
-
                 🕒 Recent Transactions
-
             </h4>
 
-            <a href="/reports"
-
-               class="btn btn-primary btn-sm">
+            <a
+                href="/reports"
+                class="btn btn-primary btn-sm">
 
                 View All
 
@@ -607,105 +810,122 @@ Budget Left
 
         </div>
 
+
         {% if recent_transactions %}
 
-        <div class="table-responsive">
+            <div class="table-responsive">
 
-            <table class="table table-hover align-middle">
+                <table class="table table-hover align-middle transaction-table">
 
-                <thead class="table-light">
+                    <thead class="table-light">
 
-                    <tr>
+                        <tr>
 
-                        <th>Type</th>
+                            <th>
+                                Type
+                            </th>
 
-                        <th>Title</th>
+                            <th>
+                                Title
+                            </th>
 
-                        <th>Month</th>
+                            <th>
+                                Date / Month
+                            </th>
 
-                        <th class="text-end">Amount</th>
+                            <th class="text-end">
+                                Amount
+                            </th>
 
-                    </tr>
+                        </tr>
 
-                </thead>
+                    </thead>
 
-                <tbody>
 
-                    {% for item in recent_transactions %}
+                    <tbody>
 
-                    <tr>
+                        {% for item in recent_transactions %}
 
-                        <td>
+                            <tr>
 
-                            {% if item.type=="Income" %}
+                                <td>
 
-                            <span class="badge bg-success">
+                                    {% if item.type == "Income" %}
 
-                                Income
+                                        <span class="badge bg-success">
 
-                            </span>
+                                            Income
 
-                            {% else %}
+                                        </span>
 
-                            <span class="badge bg-danger">
+                                    {% else %}
 
-                                Expense
+                                        <span class="badge bg-danger">
 
-                            </span>
+                                            Expense
 
-                            {% endif %}
+                                        </span>
 
-                        </td>
+                                    {% endif %}
 
-                        <td>
+                                </td>
 
-                            {{ item.title }}
 
-                        </td>
+                                <td>
 
-                        <td>
+                                    <strong>
+                                        {{ item.title }}
+                                    </strong>
 
-                            {{ item.month }}
+                                </td>
 
-                        </td>
 
-                        <td class="text-end fw-bold">
+                                <td>
 
-                            ₹{{ item.amount }}
+                                    <span class="text-muted">
 
-                        </td>
+                                        {{ item.month }}
 
-                    </tr>
+                                    </span>
 
-                    {% endfor %}
+                                </td>
 
-                </tbody>
 
-            </table>
+                                <td class="text-end fw-bold">
 
-        </div>
+                                    ₹{{ "{:,.2f}".format(item.amount|float) }}
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
 
         {% else %}
 
-        <div class="text-center py-5">
+            <div class="text-center py-5">
 
-            <i class="bi bi-receipt"
+                <i
+                    class="bi bi-receipt"
+                    style="font-size:70px;color:#d1d5db;">
+                </i>
 
-               style="font-size:70px;color:#d1d5db;"></i>
+                <h5 class="mt-3">
+                    No Transactions Found
+                </h5>
 
-            <h5 class="mt-3">
+                <p class="text-muted">
+                    Add your first income or expense.
+                </p>
 
-                No Transactions Found
-
-            </h5>
-
-            <p class="text-muted">
-
-                Add your first income or expense.
-
-            </p>
-
-        </div>
+            </div>
 
         {% endif %}
 
@@ -713,34 +933,36 @@ Budget Left
 
 </div>
 
-<!-- ========================= -->
-<!-- Quick Actions -->
-<!-- ========================= -->
+
+
+<!-- =====================================================
+     QUICK ACTIONS
+===================================================== -->
 
 <div class="mt-4">
 
     <h4 class="fw-bold mb-4">
-
         ⚡ Quick Actions
-
     </h4>
+
 
     <div class="row g-4">
 
+
+        <!-- INCOME -->
+
         <div class="col-lg-2 col-md-4 col-6">
 
-            <a href="/income"
-
-               class="text-decoration-none">
+            <a
+                href="/income"
+                class="text-decoration-none">
 
                 <div class="quick-card bg-success text-white">
 
                     <i class="bi bi-plus-circle-fill"></i>
 
                     <h6 class="mt-3">
-
                         Income
-
                     </h6>
 
                 </div>
@@ -749,20 +971,22 @@ Budget Left
 
         </div>
 
+
+
+        <!-- EXPENSE -->
+
         <div class="col-lg-2 col-md-4 col-6">
 
-            <a href="/expenses"
-
-               class="text-decoration-none">
+            <a
+                href="/expenses"
+                class="text-decoration-none">
 
                 <div class="quick-card bg-danger text-white">
 
                     <i class="bi bi-dash-circle-fill"></i>
 
                     <h6 class="mt-3">
-
                         Expense
-
                     </h6>
 
                 </div>
@@ -771,20 +995,22 @@ Budget Left
 
         </div>
 
+
+
+        <!-- BUDGET -->
+
         <div class="col-lg-2 col-md-4 col-6">
 
-            <a href="/budget"
-
-               class="text-decoration-none">
+            <a
+                href="/budget"
+                class="text-decoration-none">
 
                 <div class="quick-card bg-warning text-white">
 
                     <i class="bi bi-wallet-fill"></i>
 
                     <h6 class="mt-3">
-
                         Budget
-
                     </h6>
 
                 </div>
@@ -793,20 +1019,22 @@ Budget Left
 
         </div>
 
+
+
+        <!-- GOALS -->
+
         <div class="col-lg-2 col-md-4 col-6">
 
-            <a href="/goal_planner"
-
-               class="text-decoration-none">
+            <a
+                href="/goal_planner"
+                class="text-decoration-none">
 
                 <div class="quick-card bg-primary text-white">
 
                     <i class="bi bi-bullseye"></i>
 
                     <h6 class="mt-3">
-
                         Goals
-
                     </h6>
 
                 </div>
@@ -815,20 +1043,22 @@ Budget Left
 
         </div>
 
+
+
+        <!-- INSURANCE -->
+
         <div class="col-lg-2 col-md-4 col-6">
 
-            <a href="/insurance"
-
-               class="text-decoration-none">
+            <a
+                href="/insurance"
+                class="text-decoration-none">
 
                 <div class="quick-card bg-info text-white">
 
                     <i class="bi bi-shield-check"></i>
 
                     <h6 class="mt-3">
-
                         Insurance
-
                     </h6>
 
                 </div>
@@ -837,20 +1067,22 @@ Budget Left
 
         </div>
 
+
+
+        <!-- REPORTS -->
+
         <div class="col-lg-2 col-md-4 col-6">
 
-            <a href="/reports"
-
-               class="text-decoration-none">
+            <a
+                href="/reports"
+                class="text-decoration-none">
 
                 <div class="quick-card bg-dark text-white">
 
                     <i class="bi bi-file-earmark-bar-graph-fill"></i>
 
                     <h6 class="mt-3">
-
                         Reports
-
                     </h6>
 
                 </div>
@@ -862,112 +1094,124 @@ Budget Left
     </div>
 
 </div>
+
+
 </div>
 
 {% endblock %}
+
+
 
 {% block extra_js %}
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+
 <script>
 
 const ctx = document.getElementById("financeChart");
 
-if(ctx){
+if (ctx) {
 
-new Chart(ctx,{
+    new Chart(ctx, {
 
-type:"bar",
+        type: "bar",
 
-data:{
+        data: {
 
-labels:[
+            labels: [
+                "Income",
+                "Expenses",
+                "Savings"
+            ],
 
-"Income",
+            datasets: [{
 
-"Expense",
+                label: "Amount",
 
-"Savings"
+                data: [
 
-],
+                    {{ total_income|float }},
 
-datasets:[{
+                    {{ total_expenses|float }},
 
-label:"Amount",
+                    {{ total_savings|float }}
 
-data:[
+                ],
 
-{{ total_income }},
+                backgroundColor: [
 
-{{ total_expenses }},
+                    "#22c55e",
+                    "#ef4444",
+                    "#2563eb"
 
-{{ total_savings }}
+                ],
 
-],
+                borderRadius: 12,
 
-backgroundColor:[
+                borderSkipped: false
 
-"#22c55e",
+            }]
 
-"#ef4444",
+        },
 
-"#2563eb"
 
-],
+        options: {
 
-borderRadius:12,
+            responsive: true,
 
-borderSkipped:false
+            maintainAspectRatio: false,
 
-}]
+            plugins: {
 
-},
-options:{
+                legend: {
+                    display: false
+                }
 
-responsive:true,
+            },
 
-maintainAspectRatio:false,
 
-plugins:{
+            scales: {
 
-legend:{
+                y: {
 
-display:false
+                    beginAtZero: true,
 
-}
+                    ticks: {
 
-},
+                        callback: function(value) {
 
-scales:{
+                            return "₹" +
+                                value.toLocaleString("en-IN");
 
-y:{
+                        }
 
-beginAtZero:true,
+                    },
 
-grid:{
+                    grid: {
 
-color:"#e5e7eb"
+                        color: "#e5e7eb"
 
-}
+                    }
 
-},
+                },
 
-x:{
 
-grid:{
+                x: {
 
-display:false
+                    grid: {
 
-}
+                        display: false
 
-}
+                    }
 
-}
+                }
 
-}
+            }
 
-});
+        }
+
+    });
 
 }
 

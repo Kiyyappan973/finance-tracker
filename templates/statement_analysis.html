@@ -1,0 +1,912 @@
+{% extends "base.html" %}
+
+{% block title %}
+Statement Analysis
+{% endblock %}
+
+
+{% block extra_css %}
+
+<style>
+
+/* =====================================================
+   PAGE
+===================================================== */
+
+.analysis-page {
+    padding-bottom: 50px;
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.analysis-header {
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    color: white;
+    border-radius: 25px;
+    padding: 35px;
+    margin-bottom: 25px;
+}
+
+.analysis-header h2 {
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   SUMMARY CARDS
+===================================================== */
+
+.analysis-card {
+    border: none;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 10px 28px rgba(0,0,0,.08);
+    height: 100%;
+}
+
+.analysis-card:hover {
+    transform: translateY(-4px);
+    transition: .3s;
+}
+
+
+.analysis-icon {
+    width: 60px;
+    height: 60px;
+
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 26px;
+}
+
+
+.analysis-amount {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   CATEGORY CARDS
+===================================================== */
+
+.category-card {
+    border: none;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0 8px 24px rgba(0,0,0,.07);
+    padding: 22px;
+
+    height: 100%;
+
+    transition: .3s;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+}
+
+
+.category-icon {
+    font-size: 32px;
+}
+
+
+.category-name {
+    font-weight: 600;
+    margin-top: 10px;
+}
+
+
+.category-amount {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   TRANSACTION TABLE
+===================================================== */
+
+.transaction-box {
+    border: none;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 10px 28px rgba(0,0,0,.07);
+}
+
+.transaction-table {
+    min-width: 700px;
+}
+
+
+/* =====================================================
+   EMPTY STATE
+===================================================== */
+
+.empty-box {
+    padding: 70px 20px;
+    text-align: center;
+}
+
+.empty-box i {
+    font-size: 70px;
+    color: #d1d5db;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 576px) {
+
+    .analysis-header {
+        padding: 25px;
+    }
+
+    .analysis-amount {
+        font-size: 23px;
+    }
+
+}
+
+</style>
+
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="container-fluid analysis-page">
+
+
+<!-- =====================================================
+     HEADER
+===================================================== -->
+
+<div class="analysis-header">
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+
+        <div>
+
+            <h6 class="text-white-50 mb-2">
+                🏦 Bank Statement Analyzer
+            </h6>
+
+            <h2 class="mb-2">
+                {{ analysis.month }} Statement Analysis
+            </h2>
+
+            <p class="mb-0">
+                {{ analysis.transaction_count }}
+                transactions analyzed
+            </p>
+
+        </div>
+
+
+        <div>
+
+            <a
+                href="/smart_analyzer"
+                class="btn btn-light">
+
+                <i class="bi bi-upload"></i>
+                Upload Another
+
+            </a>
+
+        </div>
+        <div class="text-center mt-4">
+
+    <a href="/statement_analysis"
+       class="btn btn-primary">
+
+        <i class="bi bi-bar-chart-line"></i>
+        View Statement Analysis
+
+    </a>
+
+</div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     CREDIT / DEBIT SUMMARY
+===================================================== -->
+
+<div class="row g-4 mb-4">
+
+
+    <!-- TOTAL CREDIT -->
+
+    <div class="col-lg-4 col-md-6">
+
+        <div class="analysis-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-2">
+                            Total Credits
+                        </p>
+
+                        <div class="analysis-amount text-success">
+
+                            ₹{{ "{:,.2f}".format(
+                                analysis.total_credit|float
+                            ) }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="analysis-icon bg-success bg-opacity-10">
+
+                        <i class="bi bi-arrow-down-left text-success"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- TOTAL DEBIT -->
+
+    <div class="col-lg-4 col-md-6">
+
+        <div class="analysis-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-2">
+                            Total Debits
+                        </p>
+
+                        <div class="analysis-amount text-danger">
+
+                            ₹{{ "{:,.2f}".format(
+                                analysis.total_debit|float
+                            ) }}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="analysis-icon bg-danger bg-opacity-10">
+
+                        <i class="bi bi-arrow-up-right text-danger"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- BALANCE CHANGE -->
+
+    <div class="col-lg-4 col-md-6">
+
+        <div class="analysis-card">
+
+            <div class="card-body p-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+
+                    <div>
+
+                        <p class="text-muted mb-2">
+                            Net Change
+                        </p>
+
+
+                        {% if analysis.statement_balance_change >= 0 %}
+
+                            <div class="analysis-amount text-primary">
+
+                                +₹{{ "{:,.2f}".format(
+                                    analysis.statement_balance_change|float
+                                ) }}
+
+                            </div>
+
+                        {% else %}
+
+                            <div class="analysis-amount text-danger">
+
+                                -₹{{ "{:,.2f}".format(
+                                    analysis.statement_balance_change|abs|float
+                                ) }}
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <div class="analysis-icon bg-primary bg-opacity-10">
+
+                        <i class="bi bi-bank text-primary"></i>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     EXPENSE CATEGORIES
+===================================================== -->
+
+<div class="mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h3 class="fw-bold mb-1">
+                💸 Where Did Your Money Go?
+            </h3>
+
+            <p class="text-muted mb-0">
+                Your spending breakdown for {{ analysis.month }}
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div class="row g-4">
+
+
+        <!-- FOOD -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    🍔
+                </div>
+
+                <div class="category-name">
+                    Food
+                </div>
+
+                <div class="category-amount text-danger">
+
+                    ₹{{ "{:,.2f}".format(
+                        analysis.category_totals["FOOD"]|float
+                    ) }}
+
+                </div>
+
+            </div>
+
+        </div>
+        <!-- =====================================================
+     SPENDING CHART
+===================================================== -->
+
+<div class="card transaction-box mt-5">
+
+    <div class="card-body p-4">
+
+        <h4 class="fw-bold mb-1">
+            📊 Spending Breakdown
+        </h4>
+
+        <p class="text-muted mb-4">
+            Category-wise spending for {{ analysis.month }}
+        </p>
+
+        <div style="height:350px;">
+
+            <canvas id="spendingChart"></canvas>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+        <!-- SHOPPING -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    🛒
+                </div>
+
+                <div class="category-name">
+                    Shopping
+                </div>
+
+                <div class="category-amount text-danger">
+
+                    ₹{{ "{:,.2f}".format(
+                        analysis.category_totals["SHOPPING"]|float
+                    ) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- FUEL -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    ⛽
+                </div>
+
+                <div class="category-name">
+                    Fuel
+                </div>
+
+                <div class="category-amount text-danger">
+
+                    ₹{{ "{:,.2f}".format(
+                        analysis.category_totals["FUEL"]|float
+                    ) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- MEDICAL -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    💊
+                </div>
+
+                <div class="category-name">
+                    Medical
+                </div>
+
+                <div class="category-amount text-danger">
+
+                    ₹{{ "{:,.2f}".format(
+                        analysis.category_totals["MEDICAL"]|float
+                    ) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- ENTERTAINMENT -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    🎬
+                </div>
+
+                <div class="category-name">
+                    Entertainment
+                </div>
+
+                <div class="category-amount text-danger">
+
+                    ₹{{ "{:,.2f}".format(
+                        analysis.category_totals["ENTERTAINMENT"]|float
+                    ) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TRAVEL -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    🚕
+                </div>
+
+                <div class="category-name">
+                    Travel
+                </div>
+
+                <div class="category-amount text-danger">
+
+                    ₹{{ "{:,.2f}".format(
+                        analysis.category_totals["TRAVEL"]|float
+                    ) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- SALARY -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    💰
+                </div>
+
+                <div class="category-name">
+                    Salary
+                </div>
+
+                <div class="category-amount text-success">
+
+                    ₹{{ "{:,.2f}".format(
+                        analysis.category_totals["SALARY"]|float
+                    ) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- OTHERS -->
+
+        <div class="col-lg-3 col-md-4 col-6">
+
+            <div class="category-card">
+
+                <div class="category-icon">
+                    📦
+                </div>
+
+                <div class="category-name">
+                    Others
+                </div>
+
+                <div class="category-amount text-danger">
+
+                    ₹{{ "{:,.2f}".format(
+                        analysis.category_totals["OTHERS"]|float
+                    ) }}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     TRANSACTIONS
+===================================================== -->
+
+<div class="transaction-box mt-5">
+
+    <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+
+            <div>
+
+                <h4 class="fw-bold mb-1">
+                    🧾 Statement Transactions
+                </h4>
+
+                <p class="text-muted mb-0">
+                    Transactions detected from your bank statement
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {% if analysis.transactions %}
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle transaction-table">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>
+                            Date
+                        </th>
+
+                        <th>
+                            Description
+                        </th>
+
+                        <th>
+                            Category
+                        </th>
+
+                        <th class="text-end">
+                            Debit
+                        </th>
+
+                        <th class="text-end">
+                            Credit
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                {% for transaction in analysis.transactions %}
+
+                    <tr>
+
+                        <td>
+
+                            {{ transaction.get("date", "-") }}
+
+                        </td>
+
+
+                        <td>
+
+                            <strong>
+
+                                {{ transaction.get(
+                                    "description",
+                                    "Unknown"
+                                ) }}
+
+                            </strong>
+
+                        </td>
+
+
+                        <td>
+
+                            <span class="badge bg-secondary">
+
+                                {{ transaction.get(
+                                    "category",
+                                    "OTHERS"
+                                ) }}
+
+                            </span>
+
+                        </td>
+
+
+                        <td class="text-end text-danger fw-bold">
+
+                            {% if transaction.get("debit", 0) %}
+
+                                ₹{{ "{:,.2f}".format(
+                                    transaction.get(
+                                        "debit", 0
+                                    )|float
+                                ) }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+
+                        <td class="text-end text-success fw-bold">
+
+                            {% if transaction.get("credit", 0) %}
+
+                                ₹{{ "{:,.2f}".format(
+                                    transaction.get(
+                                        "credit", 0
+                                    )|float
+                                ) }}
+
+                            {% else %}
+
+                                —
+
+                            {% endif %}
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        {% else %}
+
+        <div class="empty-box">
+
+            <i class="bi bi-file-earmark-x"></i>
+
+            <h4 class="mt-3">
+                No Transactions Found
+            </h4>
+
+            <p class="text-muted">
+                No statement transactions were found for this month.
+            </p>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+const spendingChart =
+    document.getElementById("spendingChart");
+
+if (spendingChart) {
+
+    new Chart(spendingChart, {
+
+        type: "doughnut",
+
+        data: {
+
+            labels: [
+                "Food",
+                "Shopping",
+                "Fuel",
+                "Medical",
+                "Entertainment",
+                "Travel",
+                "Others"
+            ],
+
+            datasets: [{
+
+                data: [
+
+                    {{ analysis.category_totals["FOOD"] }},
+
+                    {{ analysis.category_totals["SHOPPING"] }},
+
+                    {{ analysis.category_totals["FUEL"] }},
+
+                    {{ analysis.category_totals["MEDICAL"] }},
+
+                    {{ analysis.category_totals["ENTERTAINMENT"] }},
+
+                    {{ analysis.category_totals["TRAVEL"] }},
+
+                    {{ analysis.category_totals["OTHERS"] }}
+
+                ]
+
+            }]
+
+        },
+
+        options: {
+
+            responsive: true,
+
+            maintainAspectRatio: false,
+
+            plugins: {
+
+                legend: {
+
+                    position: "bottom"
+
+                }
+
+            }
+
+        }
+
+    });
+
+}
+
+</script>
+
+{% endblock %}

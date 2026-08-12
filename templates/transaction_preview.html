@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold">
+                📄 Transaction Preview
+            </h2>
+
+            <p class="text-muted">
+                Review your uploaded bank statement before importing.
+            </p>
+        </div>
+
+        <a href="/smart_analyzer" class="btn btn-outline-primary rounded-pill px-4">
+            ⬅ Upload Another File
+        </a>
+        <div class="text-center mt-4">
+
+    <a href="/statement_analysis"
+       class="btn btn-success btn-lg">
+
+        📊 View Statement Analysis
+
+    </a>
+
+</div>
+        <div class="alert alert-success rounded-4">
+
+    <strong>Detected Bank :</strong>
+
+    {{ bank }}
+
+</div>
+
+    </div>
+
+    <div class="card border-0 shadow rounded-4">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+    <thead class="table-light">
+
+        <tr>
+
+            <th>Date</th>
+
+            <th>Description</th>
+
+            <th>Debit</th>
+
+            <th>Credit</th>
+
+            <th>Balance</th>
+
+            <th>Category</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for row in transactions %}
+
+        <tr>
+
+            <td>{{ row.date }}</td>
+
+            <td>{{ row.description }}</td>
+
+            <td>{{ row.debit }}</td>
+
+            <td>{{ row.credit }}</td>
+
+            <td>{{ row.balance }}</td>
+
+            <td>
+
+                <span class="badge bg-primary">
+
+                    {{ row.category }}
+
+                </span>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+</table>
+<form action="{{ url_for('import_transactions') }}" method="POST">
+
+    <input
+        type="hidden"
+        name="transactions"
+        value='{{ clean_transactions | tojson }}'
+    >
+
+    <button type="submit">
+        ✅ Import Transactions
+    </button>
+
+</form>
+
+<div class="text-end mt-4">
+
+    <form action="/import_transactions" method="POST">
+
+        <button
+            class="btn btn-success btn-lg rounded-pill px-5">
+
+            🚀 Import Transactions
+
+        </button>
+
+    </form>
+
+</div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
