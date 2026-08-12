@@ -1673,6 +1673,15 @@ def settings():
         return redirect("/login")
 
     return render_template("settings.html")
+@app.route("/smart_analyzer")
+def smart_analyzer():
+
+    if not is_logged_in():
+        return redirect("/login")
+
+    return render_template(
+        "smart_analyzer.html"
+    )
 @app.route("/analyze_statement", methods=["POST"])
 def analyze_statement():
 
