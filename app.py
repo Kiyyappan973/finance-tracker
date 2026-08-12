@@ -2427,9 +2427,9 @@ def statement_analysis_page():
     username = session["username"]
 
     analysis = analyze_statement(
-        db,
-        username
-    )
+    db,
+    username
+)
 
     return render_template(
         "statement_analysis.html",
