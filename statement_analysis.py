@@ -2,7 +2,7 @@ from datetime import datetime
 
 
 
-def analyze_statement(db, username):
+def analyze_statement_data(db, username):
 
     # =========================================
     # GET USER TRANSACTIONS

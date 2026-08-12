@@ -3,7 +3,7 @@ from pymongo import MongoClient
 from parser_engine import process_dataframe
 from transaction_service import process_transactions, save_transactions
 from statement_reader import read_statement
-from statement_analysis import analyze_statement as analyze_statement_data
+from statement_analysis import analyze_statement_data
 from bson import ObjectId
 from column_mapper import normalize_columns
 from datetime import datetime
@@ -2426,10 +2426,10 @@ def statement_analysis_page():
 
     username = session["username"]
 
-    analysis = analyze_statement(
-    db,
-    username
-)
+    analysis = analyze_statement_data(
+        db,
+        username
+    )
 
     return render_template(
         "statement_analysis.html",
