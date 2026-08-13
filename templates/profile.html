@@ -22,20 +22,26 @@ Profile
 
                 {% if user.profile_pic %}
 
-                <img src="{{ url_for('static', filename='uploads/' + user.profile_pic) }}"
-                     class="rounded-circle shadow"
-                     width="180"
-                     height="180"
-                     style="object-fit:cover; border:5px solid #fff;">
+    <img
+        src="{{ url_for('static', filename='uploads/profiles/' + user.profile_pic) }}"
+        class="rounded-circle shadow"
+        width="180"
+        height="180"
+        style="object-fit: cover; border: 5px solid #fff;"
+        alt="Profile Picture"
+    >
 
-                {% else %}
+{% else %}
 
-                <img src="https://ui-avatars.com/api/?name={{ user.fullname }}&background=2563eb&color=fff&size=180"
-                     class="rounded-circle shadow"
-                     width="180"
-                     height="180">
+    <img
+        src="https://ui-avatars.com/api/?name={{ user.fullname }}&background=2563eb&color=fff&size=180"
+        class="rounded-circle shadow"
+        width="180"
+        height="180"
+        alt="Default Profile Picture"
+    >
 
-                {% endif %}
+{% endif %}
 
                 <label for="profile_pic"
                        class="btn btn-primary rounded-circle position-absolute"

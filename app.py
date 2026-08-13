@@ -1599,14 +1599,39 @@ def upload_profile():
         flash("Please choose an image.", "warning")
         return redirect("/profile")
 
+    # ========================================
+    # FILE NAME
+    # ========================================
+
     filename = secure_filename(file.filename)
 
-    filepath = os.path.join(
-     app.config["PROFILE_FOLDER"],
-    filename
+    # ========================================
+    # CREATE PROFILE FOLDER
+    # ========================================
+
+    os.makedirs(
+        app.config["PROFILE_FOLDER"],
+        exist_ok=True
     )
 
+    # ========================================
+    # FILE PATH
+    # ========================================
+
+    filepath = os.path.join(
+        app.config["PROFILE_FOLDER"],
+        filename
+    )
+
+    # ========================================
+    # SAVE IMAGE
+    # ========================================
+
     file.save(filepath)
+
+    # ========================================
+    # UPDATE MONGODB
+    # ========================================
 
     db.users.update_one(
         {"username": session["username"]},
@@ -1617,7 +1642,14 @@ def upload_profile():
         }
     )
 
-    flash("Profile picture updated successfully!", "success")
+    # ========================================
+    # SUCCESS
+    # ========================================
+
+    flash(
+        "Profile picture updated successfully!",
+        "success"
+    )
 
     return redirect("/profile")
 @app.route("/search")
